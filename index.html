@@ -1240,6 +1240,8 @@ function mkRoom(role,rid){return new Promise((resolve,reject)=>{
    const l=roster.map(x=>entry(x.peer,x.presence,x.peer==myId()));if(!l.some(x=>x.isMe))l.push(entry(myId(),pres,1));return l},
   onPeers(f){PCH.push(f);return()=>{const i=PCH.indexOf(f);if(i>=0)PCH.splice(i,1)}},
   onClose:null,
+  myId:()=>myId(),
+  prune:()=>{try{R._prune&&R._prune()}catch(e){}},
   leave(){closed=true;if(hb){clearInterval(hb);hb=null}try{peer.destroy()}catch(e){}return Promise.resolve()}};
  peer=role=='host'?new Peer(rid,PCFG):new Peer(PCFG);
  peer.on('error',e=>{if(!done){fail(e.type=='unavailable-id'?'その部屋名はすでに使われています（別の部屋名にしてください）':e.type=='peer-unavailable'?'部屋が見つかりません（ホストが部屋を作っているか確認してください）':'接続エラー：'+e.type)}});
@@ -1249,7 +1251,7 @@ function mkRoom(role,rid){return new Promise((resolve,reject)=>{
   peer.on('connection',c=>{
    const gone=()=>{const g=G2[c.peer];if(!g||g.conn!==c)return;delete G2[c.peer];sendAll(rosterMsg());fireP([],[entry(c.peer,g.p)])};
    const dead=g=>{if(!g.conn||!g.conn.open)return true;try{const st=g.conn.peerConnection&&g.conn.peerConnection.iceConnectionState;if(st=='failed'||st=='closed')return true}catch(e){}return Date.now()-g.seen>20000};
-    const prune=()=>{let ch=false;for(const id of Object.keys(G2)){const g=G2[id];if(dead(g)){delete G2[id];try{g.conn.close()}catch(e){}fireP([],[entry(id,g.p)]);ch=true}}if(ch)sendAll(rosterMsg())};
+    const prune=R._prune=()=>{let ch=false;for(const id of Object.keys(G2)){const g=G2[id];if(dead(g)){delete G2[id];try{g.conn.close()}catch(e){}fireP([],[entry(id,g.p)]);ch=true}}if(ch)sendAll(rosterMsg())};
     c.on('open',()=>{prune();if(Object.keys(G2).length>=2){try{c.send({k:'full'})}catch(e){}setTimeout(()=>{try{c.close()}catch(e){}},400);return}G2[c.peer]={conn:c,p:{},seen:Date.now()}});
    c.on('data',o=>{if(!o||typeof o!='object')return;const g=G2[c.peer];if(!g||g.conn!==c)return;g.seen=Date.now();
     if(o.k=='h')return;if(o.k=='p'){const was=Object.keys(g.p).length>0;g.p=(o.p&&typeof o.p=='object')?o.p:{};sendAll(rosterMsg());fireP(was?[]:[entry(c.peer,g.p)],[])}
@@ -1287,9 +1289,10 @@ async function goOnline(role){
   if(ROLE=='host'){ch.left.forEach(p=>{const s=SEATS[p.peer];if(s!=null&&G.hum&&G.hum[s])takeover(s)});if(ch.joined.length)LASTM=['','']}});
  if(role=='host'){
   RM.on('act',m=>{if(ROLE!='host'||!G.h)return;const s=SEATS[m.peer],d=m.data||{};if(s==null||typeof d.a!='string')return;if((d.a=='feverEnd'||d.a=='feverContinue')&&s==G.feverChoiceW){if(d.a=='feverEnd')feverChoiceEnd();else feverChoiceContinue();return}act(s,d.a,d.x,d.p)});
-  TMR=setInterval(()=>{LASTM=['',''];bcast()},3000)}
+  RM.on('need',()=>{if(G.h){RM.emit('seat',{map:SEATS}).catch(()=>{});LASTM=['',''];bcast()}});
+   TMR=setInterval(()=>{if(G.h&&Object.keys(SEATS).length)RM.emit('seat',{map:SEATS}).catch(()=>{});LASTM=['',''];bcast()},3000)}
  else{
-  RM.on('seat',m=>{KIF=null;const my=RM.peers().find(p=>p.isMe&&p.sameTab),mp=m.data&&m.data.map;if(my&&mp&&mp[my.peer]!=null)V=mp[my.peer]});
+  RM.on('seat',m=>{const mp=m.data&&m.data.map,id=RM.myId();if(mp&&mp[id]!=null){if(V!=mp[id]){KIF=null;V=mp[id]}if(!G.h)RM.emit('need',{}).catch(()=>{})}});
   [1,2].forEach(s=>{onBig(RM,'st'+s,m=>{if(ROLE=='guest'&&V==s&&m.data)gApply(m.data)});onBig(RM,'r'+s,m=>{if(V==s&&m.data){RES=m.data.r||null;if(G.h)draw()}});onBig(RM,'m'+s,m=>{if(V==s&&m.data){msg=decM(m.data.m);DMSG=decM(m.data.d);if(G.h){G.dmsg=DMSG;draw()}}})});
   onBig(RM,'kif',m=>{const k=kifSan(m.data);if(!k)return;khAdd(k);KIF=k.hands;KIFN=k.names.slice();KIFME=k.me;if(G.h)draw();else if($('kiflist')&&$('kiflist').style.display=='block')kifListDraw()});
    RM.on('lobby',()=>{G={opt:G.opt};V=-1;lobby()})}
@@ -1553,7 +1556,7 @@ function startGame(mode){
  const o={rep:$('orep').checked,dora:+$('odora').value,om2:$('oom2').checked,tud:$('otud').checked},hum=[1,0,0],names=[clean(NICK)||'あなた','CPU-A','CPU-B'];
  if(!RM||mode=='solo'){const n=$('nick');if(n)names[0]=clean(n.value)||'あなた';NICK=names[0]}
  SEATS={};V=0;
- if(mode=='host'&&RM){RM.peers().filter(p=>!p.isMe&&p.presence&&p.presence.role=='guest').slice(0,2).forEach((g,i)=>{hum[i+1]=1;names[i+1]=clean(g.presence.nick)||'ゲスト';SEATS[g.peer]=i+1});RM.emit('seat',{map:SEATS}).catch(()=>{});setTimeout(()=>{LASTM=['',''];bcast()},500)}
+ if(mode=='host'&&RM){RM.prune();RM.peers().filter(p=>!p.isMe&&p.presence&&p.presence.role=='guest').slice(0,2).forEach((g,i)=>{hum[i+1]=1;names[i+1]=clean(g.presence.nick)||'ゲスト';SEATS[g.peer]=i+1});RM.emit('seat',{map:SEATS}).catch(()=>{});setTimeout(()=>{LASTM=['',''];bcast()},500)}
  G={opt:o,pts:[35000,35000,35000],dealer:0,hn:1,honba:0,pot:0,chips:[0,0,0],used:[0,0,0],hum,names,over:false};newHand()}
 menu();
 </script></body></html>
