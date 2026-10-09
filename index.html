@@ -62,7 +62,7 @@ button.g{background:#ddd}button.r{background:#e74c3c;color:#fff}
 .modal h3{margin:0;padding:2px 8px;background:#12557a;font-size:11px}
 .mh{display:flex;align-items:flex-end;gap:1px;padding:3px 8px}.mh .t{--w:min(18px,4.2vh)}
 .tulipsec{padding:1px 8px 2px}
-.tulipflip{display:flex;gap:3px;perspective:400px;margin-top:2px}
+.tulipflip{display:flex;flex-wrap:wrap;gap:4px 3px;max-width:100%;perspective:400px;margin-top:2px}.tulipflip .tpair{display:inline-flex;gap:3px;margin-right:10px}
 .tulipflip .t{--w:min(18px,4.2vh);animation:tflip .5s ease-out both;transform-style:preserve-3d;position:relative}
 .tulipflip .t.hit{box-shadow:0 0 10px 4px #ffd54a,0 2px 0 #b5b5a8,0 3px 3px #0008;animation:tflip .5s ease-out both,tpulse .8s ease-in-out .55s 2}
 .tulipflip .t .tn{position:absolute;right:-3px;bottom:-3px;background:#e23;color:#fff;font-size:8px;font-style:normal;text-decoration:none;border-radius:7px;padding:0 3px;line-height:1.2;font-weight:bold;box-shadow:0 1px 2px #0008}
@@ -941,6 +941,10 @@ function wildScore(w,h,X){const c=cnt(h),kt=[].concat(...G.kan[w],...G.pon[w].ma
  return 1+(G.pon[w].length?0:1)+YH.h+d+u+rd+gd+ip+fv+rin}
 function bestWild(w){const h13=G.h[w].filter((_,i)=>i!=G.last);let best=null,bv=-1;
  for(const X of waits(h13,w)){const v=wildScore(w,h13.concat(X),X);if(v>bv){bv=v;best=X}}return best}
+function consumeTulipWall(indices){
+ if(!indices||!indices.length)return;
+ [...new Set(indices)].sort((a,b)=>b-a).forEach(i=>{if(i>=0&&i<G.wall.length)G.wall.splice(i,1)});
+}
 function win_(w,from,t,mo,first,dw){if(mo)return win2_(w,from,t,mo,first,dw);callFx(from>=0,()=>win2_(w,from,t,mo,first,dw))}
 function win2_(w,from,t,mo,first,dw){
  const h=G.h[w].slice();if(from>=0)h.push(t);let wt=from>=0?t:G.h[w][G.last];let pochT=null;if(G.wild===w&&from<0){const bw=bestWild(w);if(bw!=null){pochT=wt;h[G.last]=bw;wt=bw}}G.wild=-1;const c=cnt(h),kt=[].concat(...G.kan[w],...G.pon[w].map(ptl)),cf=cnt(h.concat(kt)),ron=from>=0,nm=G.names;
@@ -978,11 +982,7 @@ function win2_(w,from,t,mo,first,dw){
    }
   }
  }
- function consumeTulipWall(indices){
-  if(!indices||!indices.length)return;
-  [...new Set(indices)].sort((a,b)=>b-a).forEach(i=>{if(i>=0&&i<G.wall.length)G.wall.splice(i,1)});
- }
- let b=yk.length?8000*yn:han>=13?8000:han>=11?6000:han>=8?4000:han>=6?3000:Math.min(2000,30*Math.pow(2,han+2));if(G.fev[w]>=2)b*=2;
+  let b=yk.length?8000*yn:han>=13?8000:han>=11?6000:han>=8?4000:han>=6?3000:Math.min(2000,30*Math.pow(2,han+2));if(G.fev[w]>=2)b*=2;
  const dd=DICE_DELTA||[0,0,0];DICE_DELTA=null;
  const hb=(G.honba||0)*1000,hbOn=mo?!!first:true,hv=hbOn?hb:0;const chg=[0,0,0],ch=ip+rd+gd*2+u+tulip,cc=dd.slice(),m=q=>(G.dbl[w]?2:1)*(G.fev[w]>=2?2:1);
  if(ron){const v=cl100(b*(dl?6:4))+hv;chg[w]+=v;chg[from]-=v;cc[w]+=ch*m(from);cc[from]-=ch*m(from)}
@@ -1214,7 +1214,7 @@ function resHtml(){const r=RES;if(!r){RIVV=false;return''}
  const chH=r.chl.length?r.chl.map(x=>`<div class="yr"><span>${x[0]}</span><span>${x[1]}枚</span></div>`).join('')+(r.dbl?'<div class="yr"><span>💰祝儀倍</span><span>×2</span></div>':''):'<span style="opacity:.6">なし</span>';
  const summ=r.yn?`役満${r.yn>1?' ×'+r.yn:''}`:`${r.han}翻30符${r.kind?' '+r.kind:''}${r.cn?' 数え役満':''}`;
  const tHits=(r.tulipHits||[]).reduce((a,x)=>a+x,0);
- const tulipHtml=(r.tulipLog&&r.tulipLog.length)?`<div class="tulipsec"><b>🌷チューリップめくり${r.tulipUD?'（上下山）':''}</b><div class="tulipflip">${r.tulipLog.map((t,i)=>{const k=t>>5,n=r.tulipHits[i];return `<span class="t ${cl(t)} ${['','rd','gd','pt'][k]} ${r.tulipFlags[i]?'hit':''}" style="animation-delay:${i*350}ms${r.tulipUD&&i%2==1?';margin-right:10px':''}">${svgTile(t)}${n>1?`<u class="tn">+${n}</u>`:''}</span>`}).join('')}</div><div class="sm1" style="animation-delay:${r.tulipLog.length*350+200}ms">${tHits?`的中${tHits}枚！チップ+${tHits}`:'ハズレ'}</div></div>`:'';
+ const tulipHtml=(r.tulipLog&&r.tulipLog.length)?`<div class="tulipsec"><b>🌷チューリップめくり${r.tulipUD?'（上下山）':''}</b><div class="tulipflip">${(()=>{const sp=(t,i)=>{const k=t>>5,n=r.tulipHits[i];return `<span class="t ${cl(t)} ${['','rd','gd','pt'][k]} ${r.tulipFlags[i]?'hit':''}" style="animation-delay:${i*350}ms">${svgTile(t)}${n>1?`<u class="tn">+${n}</u>`:''}</span>`};if(!r.tulipUD)return r.tulipLog.map(sp).join('');let o='';for(let i=0;i<r.tulipLog.length;i+=2)o+=`<span class="tpair">${sp(r.tulipLog[i],i)}${i+1<r.tulipLog.length?sp(r.tulipLog[i+1],i+1):''}</span>`;return o})()}</div><div class="sm1" style="animation-delay:${r.tulipLog.length*350+200}ms">${tHits?`的中${tHits}枚！チップ+${tHits}`:'ハズレ'}</div></div>`:'';
  const doraHtml=r.ind?`<div style="display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;padding:2px 8px;font-size:11px"><span style="display:inline-flex;align-items:center;gap:4px"><b>表ドラ表示</b><span class="mh" style="padding:0">${tiles(r.ind)}</span></span>${r.rii?`<span style="display:inline-flex;align-items:center;gap:4px"><b>裏ドラ表示</b><span class="mh" style="padding:0">${tiles(r.ura)}</span></span>`:'<span style="opacity:.6">（リーチなし：裏ドラなし）</span>'}</div>`:'';
  const pv=(r.prev||[]).map(x=>`<div style="padding:2px 8px;color:#ffd54a">ダブロン: ${x.names[x.w]} ${x.yn?'役満':x.han+'翻'} ${x.kind||''} ＋${x.chg[x.w].toLocaleString()}点</div>`).join('');
  return `<div class="modal"><h3>和了結果　${r.names[r.w]}の${r.ron?'ロン（'+r.names[r.from]+'）':'ツモ'}</h3>${pv}
@@ -1460,7 +1460,7 @@ function kifResultHtml(e,wi){
  const chH=r.chl.length?r.chl.map(x=>`<div class="yr"><span>${x[0]}</span><span>${x[1]}枚</span></div>`).join('')+(r.dbl?'<div class="yr"><span>💰祝儀倍</span><span>×2</span></div>':''):'<span style="opacity:.6">なし</span>';
  const summ=r.yn?`役満${r.yn>1?' ×'+r.yn:''}`:`${r.han}翻30符${r.kind?' '+r.kind:''}${r.cn?' 数え役満':''}`;
  const tHits=(r.tulipHits||[]).reduce((a,x)=>a+x,0);
- const tulipHtml=(r.tulipLog&&r.tulipLog.length)?`<div class="tulipsec"><b>🌷チューリップめくり${r.tulipUD?'（上下山）':''}</b><div class="tulipflip">${r.tulipLog.map((t,i)=>{const k=t>>5,n=r.tulipHits[i]||0;return `<span class="t ${cl(t)} ${['','rd','gd','pt'][k]} ${r.tulipFlags[i]?'hit':''}">${svgTile(t)}${n>1?`<u class="tn">+${n}</u>`:''}</span>`}).join('')}</div><div class="sm1">${tHits?`的中${tHits}枚！チップ+${tHits}`:'ハズレ'}</div></div>`:'';
+ const tulipHtml=(r.tulipLog&&r.tulipLog.length)?`<div class="tulipsec"><b>🌷チューリップめくり${r.tulipUD?'（上下山）':''}</b><div class="tulipflip">${(()=>{const sp=(t,i)=>{const k=t>>5,n=r.tulipHits[i]||0;return `<span class="t ${cl(t)} ${['','rd','gd','pt'][k]} ${r.tulipFlags[i]?'hit':''}">${svgTile(t)}${n>1?`<u class="tn">+${n}</u>`:''}</span>`};if(!r.tulipUD)return r.tulipLog.map(sp).join('');let o='';for(let i=0;i<r.tulipLog.length;i+=2)o+=`<span class="tpair">${sp(r.tulipLog[i],i)}${i+1<r.tulipLog.length?sp(r.tulipLog[i+1],i+1):''}</span>`;return o})()}</div><div class="sm1">${tHits?`的中${tHits}枚！チップ+${tHits}`:'ハズレ'}</div></div>`:'';
  const doraHtml=r.ind.length?`<div style="display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;padding:2px 8px;font-size:11px"><span style="display:inline-flex;align-items:center;gap:4px"><b>表ドラ表示</b><span class="mh" style="padding:0">${tiles(r.ind)}</span></span>${r.rii?`<span style="display:inline-flex;align-items:center;gap:4px"><b>裏ドラ表示</b><span class="mh" style="padding:0">${tiles(r.ura)}</span></span>`:'<span style="opacity:.6">（リーチなし：裏ドラなし）</span>'}</div>`:'';
  const finalHand=r.hand.slice();
  const winIdx=finalHand.findIndex(t=>t===r.wt || ((t&31)===(r.wt&31)));
