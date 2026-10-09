@@ -507,7 +507,7 @@ function feverWaitData(p){
  return w.map(t=>[t,left[t]]);
 }
 function feverPocchiLeft(){
- return G.wall.reduce((n,t)=>n+(t>>5)==3&&(t&31)==24?1:0,0);
+ return G.wall.reduce((n,t)=>n+((t>>5)==3&&(t&31)==24?1:0),0);
 }
 function feverWaitExhausted(){
  const p=feverOwner();
@@ -517,7 +517,15 @@ function feverWaitExhausted(){
 }
 function checkFeverWaitExhausted(){
  if(!feverWaitExhausted()||G.stage=='done'||RES)return false;
- msg=`${G.names[feverOwner()]}のフィーバー待ち牌がすべて枯れたためテンパイ流局`;
+ const fo=feverOwner();
+ if(G.fevZero&&G.fevZero[fo]){
+  // フィーバー宣言した時点で待ち牌が0枚だった場合のみ、カットインを流して流局
+  if(G.zeroPend)return true;G.zeroPend=true;G.stage='wait';G.act=-1;
+  msg=`${G.names[fo]}のフィーバー待ち牌がゼロのため流局`;render('');
+  setTimeout(()=>{bigCall('待ち牌ゼロで流局');snd('lightning');render('');
+   setTimeout(()=>{G.zeroPend=false;end(msg,true)},3200)},2200);
+  return true}
+ msg=`${G.names[fo]}のフィーバー待ち牌がすべて枯れたためテンパイ流局`;
  end(msg,true);
  return true;
 }
@@ -526,7 +534,7 @@ const without=(h,i)=>h.filter((_,k)=>k!=i);
 const tenpaiDiscards=p=>G.pon[p].length?[]:G.h[p].map((_,i)=>i).filter(i=>G.pts[p]>=1000&&waits(without(G.h[p],i),p).length>0);
 const furiten=q=>!(G.opt.rep&&G.fev[q])&&(G.mf[q]||waits(G.h[q],q).some(t=>G.disc[q].some(d=>(d&31)==t)));
 // フィーバー系リーチだけは、宣言打牌後の待ちがフリテンなら成立させない。
-const feverFuriten=(p,i)=>{const h=without(G.h[p],i);return G.mf[p]||waits(h,p).some(t=>G.disc[p].some(d=>(d&31)==t))};
+const feverFuriten=(p,i)=>{if(G.opt.rep)return false;const h=without(G.h[p],i);return G.mf[p]||waits(h,p).some(t=>G.disc[p].some(d=>(d&31)==t))};
 
 const TIDS=['t-1m','t-7m','t-1p','t-2p','t-3p','t-4p','t-5p','t-6p','t-7p','t-8p','t-9p','t-1s','t-2s','t-3s','t-4s','t-5s','t-6s','t-7s','t-8s','t-9s','t-E','t-S','t-W','t-N','t-haku','t-hatsu','t-chun'];
 const tileId=t=>{const idx=t&31,v=t>>5;if(v==1&&idx==6)return 't-5p-red';if(v==2&&idx==6)return 't-5p-gold';if(v==1&&idx==15)return 't-5s-red';if(v==2&&idx==15)return 't-5s-gold';if(v==3&&idx==24)return 't-haku-poch';return TIDS[idx]||'t-haku'};
@@ -538,14 +546,14 @@ function newHand(){
  for(let i=w.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[w[i],w[j]]=[w[j],w[i]]}
  G.wall=w;NOPON=false;G.ind=[];G.ura=[];for(let k=0;k<G.opt.dora;k++){G.ind.push(w.pop());G.ura.push(w.pop())}if(G.opt.om2)while(G.ind.length<2){G.ind.push(w.pop());G.ura.push(w.pop())}
  G.h=[0,1,2].map(()=>w.splice(0,13).sort(st));
- G.nuki=[[],[],[]];G.disc=[[],[],[]];G.away=[[],[],[]];G.rii=[0,0,0];G.fev=[0,0,0];G.ipp=[0,0,0];G.dbl=[0,0,0];G.kan=[[],[],[]];G.pon=[[],[],[]];G.mord=[[],[],[]];G.called=false;G.rin=-1;G.dice=[0,0,0];G.wlog=[];RES=null;G.riiIdx=[-1,-1,-1];G.act=-1;G.stage='';G.turn=G.dealer;DICE_DELTA=null;G.mf=[0,0,0];
+ G.nuki=[[],[],[]];G.disc=[[],[],[]];G.away=[[],[],[]];G.rii=[0,0,0];G.fev=[0,0,0];G.ipp=[0,0,0];G.dbl=[0,0,0];G.kan=[[],[],[]];G.pon=[[],[],[]];G.mord=[[],[],[]];G.called=false;G.rin=-1;G.dice=[0,0,0];G.wlog=[];RES=null;G.riiIdx=[-1,-1,-1];G.act=-1;G.stage='';G.turn=G.dealer;DICE_DELTA=null;G.mf=[0,0,0];G.fevZero=[0,0,0];G.zeroPend=false;
  msg=`${roundLabel(G.hn)}${G.honba?G.honba+'本場':''} 親:${G.names[G.dealer]}`;kifNew();start(G.turn)}
 function start(p){
  if(G.wall.length<=0){return end(`流局（供託${G.pot}点持ち越し）`,true)}
  G.dmsg='';G.diceLog=[];const dt=G.wall.shift();G.h[p].push(dt);G.last=G.h[p].length-1;G.turn=p;
  if(feverLocked(p)){msg=`${G.names[p]}はフィーバー中のため強制ツモ切り`;G.stage='';G.act=-1;render('');setTimeout(()=>doDisc(p,G.last),450);return}
  if(G.rii[p]&&dt>>5==3){chance(p,1,'リーチ後の白ポッチツモ（オールマイティ）');G.wild=p;return win_(p,-1)}
- if(checkFeverWaitExhausted())return;
+ if(!(G.rii[p]&&canT(p,cnt(G.h[p])))&&checkFeverWaitExhausted())return;
  if(G.hum[p]){if(G.rii[p])return riichiAuto(p);G.stage='me';G.act=p;draw()}else cpuTurn(p)}
 function riichiAuto(p){
  while(true){const dt=G.h[p][G.last]&31;if((dt==0||dt==1||dt==23)&&!canT(p,cnt(G.h[p]))){const tp=G.h[p][G.last];pull(p,G.last);G.last=G.h[p].length-1;return nukiRon(p,tp,()=>{if(!pocchiNuki(p))riichiAuto(p)})}break}
@@ -571,7 +579,7 @@ function btns(){
   if(G.rii[p]&&nk(p)<4&&c.some((x,t)=>x==4&&kanOK(p,t)))a+=`<button class="g" onclick="U('disc',${G.last})">ツモ切り</button>`;
   if(canT(p,c))a+=`<button class="r" onclick="U('tsumo')">ツモ</button>`;
   if(!G.rii[p]){[0,23,1].forEach(t=>{if(c[t])a+=`<button class="g" onclick="U('nuki',${t})">${N[t]}抜き</button>`});
-   if(tenpaiDiscards(p).length){a+=`<button onclick="togRii(1)">${(PEND==1||PEND==3)?'取消':(tenpaiDiscards(p).some(i=>feverEligible(without(G.h[p],i),G.kan[p]))?'🎰フィーバーリーチ':'リーチ')}${PEND==3?'+祝儀倍':''}</button>`;if(!G.used[p])a+=`<button class="r" onclick="togRii(2)">${PEND==2?'取消':'💰祝儀倍リーチ'}</button>`}}}
+   if(tenpaiDiscards(p).length){a+=`<button onclick="togRii(1)">${(PEND==1||PEND==3)?'取消':(tenpaiDiscards(p).some(i=>feverEligible(without(G.h[p],i),G.kan[p])&&!feverFuriten(p,i))?'🎰フィーバーリーチ':'リーチ')}${PEND==3?'+祝儀倍':''}</button>`;if(!G.used[p])a+=`<button class="r" onclick="togRii(2)">${PEND==2?'取消':'💰祝儀倍リーチ'}</button>`}}}
  if(G.stage=='pon'&&G.act==p){const bc=cnt(G.h[p])[G.pt&31]>=3; a=`${bc?`<button class="r" onclick="U('dkan',1)">カン</button>`:''}<button class="r" onclick="U('pon',1)">ポン</button><button class="g" onclick="U('pon',0)">パス</button>`;}
  if(G.stage=='ron'&&G.act==p)a=`<button class="r" onclick="U('ron',1)">ロン</button><button class="g" onclick="U('ron',0)">見送り</button>`;
  if(ROLE=='host'&&G.act>=0&&G.act!=p&&G.hum[G.act]&&G.stage!='done')a+=`<button class="g" onclick="takeover(${G.act})">${G.names[G.act]}をCPU代行にする</button>`;
@@ -721,6 +729,10 @@ function chance(p,rolls,why,payer){if(!G.chCut){G.chCut=1}
  G.slow=1}
 function declareRii(p,i,m,allowFever=true){if(m){G.dbl[p]=1;G.used[p]=1}G.rii[p]=1;G.riiIdx[p]=G.disc[p].length;G.pts[p]-=1000;G.pot+=1000;G.ipp[p]=1;
  const r=without(G.h[p],i);G.fev[p]=(allowFever&&feverEligible(r,G.kan[p]))?(feverDoubleEligible(r,G.kan[p])?2:1):0;G.dice[p]=0;
+ if(!G.fevZero)G.fevZero=[0,0,0];
+ G.fevZero[p]=0;
+ if(G.fev[p]){const wr=waits(r,p),lf=Array(27).fill(0);G.wall.forEach(x=>lf[x&31]++);
+  if(wr.length>0&&wr.every(t=>lf[t]<=0)&&feverPocchiLeft()<=0)G.fevZero[p]=1}
  if(m&&G.fev[p]){
   bigCall('フィーバーシュバリーチ！');snd('lightning');
   playClip('fevshugi',()=>playClip('fevsfx'));
@@ -738,7 +750,6 @@ function doDisc(p,i){kifDisc(p,i);snd('tile');G.rin=-1;if(!G.rii[p])G.mf[p]=0;if
  if(G.fev[p]&&wtAfter.includes(t&31)){if(!G.away)G.away=[[],[],[]];G.away[p].push(t)}
  else G.disc[p].push(t);
  G.last=-1;G.stage='';
- if(checkFeverWaitExhausted())return;
  ronCheck(p,t,1)}
 function ronCheck(p,t,k,ws){ws=ws||[];
  for(;k<=2;k++){const q=(p+k)%3;
@@ -752,6 +763,7 @@ function ronCheck(p,t,k,ws){ws=ws||[];
   ws=ws.concat(q)}
  if(ws.length){G.nkc=null;G.stage='';G.act=-1;render('');return setTimeout(()=>ronWin(ws,p,t),500)}
  if(G.nkc){const f=G.nkc;G.nkc=null;return f()}
+ if(checkFeverWaitExhausted())return;
  ponCheck(p,t)}
 function nukiRon(p,t,cont){G.nkc=()=>{if(G.hum[p]){G.stage='me';G.act=p;G.turn=p}cont()};ronCheck(p,t,1)}
 function ronWin(ws,p,t){
