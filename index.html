@@ -546,7 +546,7 @@ function newHand(){
  for(let i=w.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[w[i],w[j]]=[w[j],w[i]]}
  G.wall=w;NOPON=false;G.ind=[];G.ura=[];for(let k=0;k<G.opt.dora;k++){G.ind.push(w.pop());G.ura.push(w.pop())}if(G.opt.om2)while(G.ind.length<2){G.ind.push(w.pop());G.ura.push(w.pop())}
  G.h=[0,1,2].map(()=>w.splice(0,13).sort(st));
- G.nuki=[[],[],[]];G.disc=[[],[],[]];G.away=[[],[],[]];G.rii=[0,0,0];G.fev=[0,0,0];G.ipp=[0,0,0];G.dbl=[0,0,0];G.kan=[[],[],[]];G.pon=[[],[],[]];G.mord=[[],[],[]];G.called=false;G.rin=-1;G.dice=[0,0,0];G.wlog=[];RES=null;G.riiIdx=[-1,-1,-1];G.act=-1;G.stage='';G.turn=G.dealer;DICE_DELTA=null;G.mf=[0,0,0];G.fevZero=[0,0,0];G.zeroPend=false;
+ G.nuki=[[],[],[]];G.disc=[[],[],[]];G.away=[[],[],[]];G.rii=[0,0,0];G.fev=[0,0,0];G.ipp=[0,0,0];G.dbl=[0,0,0];G.kan=[[],[],[]];G.pon=[[],[],[]];G.mord=[[],[],[]];G.called=false;G.rin=-1;G.dice=[0,0,0];G.wlog=[];RES=null;G.riiIdx=[-1,-1,-1];G.act=-1;G.stage='';G.turn=G.dealer;DICE_DELTA=null;G.mf=[0,0,0];G.fevZero=[0,0,0];G.zeroPend=false;G.gap=0;
  msg=`${roundLabel(G.hn)}${G.honba?G.honba+'本場':''} 親:${G.names[G.dealer]}`;kifNew();start(G.turn)}
 function start(p){
  if(G.wall.length<=0){return end(`流局（供託${G.pot}点持ち越し）`,true)}
@@ -719,15 +719,15 @@ function chance(p,rolls,why,payer){if(!G.chCut){G.chCut=1}
  for(let k=0;k<rolls;k++){const d=chin();tot+=d.chips;tx+=(rolls>1?`<br>【${k+1}回目】`:'')+d.text;runs.push({seq:d.seq,subtotal:d.chips})}
  const mul=G.dbl[p]?2:1,real=tot*mul;
  if(!DICE_DELTA)DICE_DELTA=[0,0,0];
- // 祝儀倍は和了時のチップ総額に対して最後に一度だけ掛ける。
- // ここで倍にすると win2_() でもう一度倍になり、サイコロ分だけ二重計上される。
- if(payer!=null){DICE_DELTA[p]+=tot;DICE_DELTA[payer]-=tot}
- else [0,1,2].forEach(q=>{if(q!=p){DICE_DELTA[p]+=tot;DICE_DELTA[q]-=tot}});
+ // サイコロチャンス分は通常チップと別計算のため、ここで祝儀倍を反映する。
+ // DICE_DELTAはwin2_()内の通常チップ倍率 m() の対象外なので、realを加算する。
+ if(payer!=null){DICE_DELTA[p]+=real;DICE_DELTA[payer]-=real}
+ else [0,1,2].forEach(q=>{if(q!=p){DICE_DELTA[p]+=real;DICE_DELTA[q]-=real}});
  tx+=mul>1?`<br><b>💰祝儀倍適用 → 実質${real>0?'+':''}${real}枚</b>`:'';
  G.dmsg=(G.dmsg?G.dmsg+'<hr>':'')+tx;
  (G.diceLog=G.diceLog||[]).push({why,rolls:runs,tot,real,mul});
  G.slow=1}
-function declareRii(p,i,m,allowFever=true){if(m){G.dbl[p]=1;G.used[p]=1}G.rii[p]=1;G.riiIdx[p]=G.disc[p].length;G.pts[p]-=1000;G.pot+=1000;G.ipp[p]=1;
+function declareRii(p,i,m,allowFever=true){G.gap=700;if(m){G.dbl[p]=1;G.used[p]=1}G.rii[p]=1;G.riiIdx[p]=G.disc[p].length;G.pts[p]-=1000;G.pot+=1000;G.ipp[p]=1;
  const r=without(G.h[p],i);G.fev[p]=(allowFever&&feverEligible(r,G.kan[p]))?(feverDoubleEligible(r,G.kan[p])?2:1):0;G.dice[p]=0;
  if(!G.fevZero)G.fevZero=[0,0,0];
  G.fevZero[p]=0;
@@ -772,7 +772,7 @@ const dw=ws.includes(G.dealer);
  callFx(true,()=>{G.rprev=[];
  ws.forEach((w,i)=>{G.dmsg='';G.diceLog=[];const last=i==ws.length-1;win_(w,p,t,last?2:1,i==0,dw);if(!last)G.rprev.push(RES)});
  G.rprev=null})}
-function nextTurn(p){const n=(p+1)%3;setTimeout(()=>start(n),G.slow?2600:350);G.slow=0;render('')}
+function nextTurn(p){const n=(p+1)%3,gp=G.gap||0;G.gap=0;setTimeout(()=>start(n),(G.slow?2600:350)+gp);G.slow=0;render('')}
 function ponCheck(p,t){const b=t&31;
  if(G.wall.length>0)for(let k=1;k<=2;k++){const q=(p+k)%3;if(G.rii[q]||feverLocked(q))continue;
   if(NOPON&&G.hum[q]){continue}
@@ -784,13 +784,13 @@ function ponCheck(p,t){const b=t&31;
    return draw();
   }
   if(n>=3)continue;
-  if([24,25,26,20,20+(q-G.dealer+3)%3].includes(b)&&Math.random()<.8)return doPon(q,p,t)}
+  if([24,25,26,20,20+(q-G.dealer+3)%3].includes(b)&&Math.random()<.8){G.stage='';G.act=-1;render('');return setTimeout(()=>doPon(q,p,t),650)}}
  nextTurn(p)}
 function doPon(q,p,t){const b=t&31,h=G.h[q],m=[t];for(let i=h.length-1;i>=0&&m.length<3;i--)if((h[i]&31)==b)m.push(...h.splice(i,1));
  m.push((p-q+3)%3);
  G.pon[q].push(m);G.mord[q].push('p');snd('pon');smCall('ポン','ポン！');G.disc[p].pop();G.called=true;G.ipp=[0,0,0];G.turn=q;G.last=-1;G.stage='';kifRec({t:'pon',p:q,from:p,tile:t});
  msg=`${G.names[q]}がポン（${N[b]}）`;
- if(G.hum[q]){G.stage='me';G.act=q;draw()}else{render('');setTimeout(()=>cpuTurn(q),700)}}
+ if(G.hum[q]){G.stage='me';G.act=q;draw()}else{render('');setTimeout(()=>cpuTurn(q),850)}}
 function doDkan(q,p,t){const b=t&31,h=G.h[q],k=[t];for(let i=h.length-1;i>=0&&k.length<4;i--)if((h[i]&31)==b)k.push(...h.splice(i,1));k.push((p-q+3)%3);G.kan[q].push(k);G.mord[q].push('k');G.disc[p].pop();G.called=true;G.ipp=[0,0,0];snd('kan');smCall('カン','カン！');G.ind.push(G.wall.pop());G.ura.push(G.wall.pop());h.sort(st);h.push(G.wall.pop());G.last=h.length-1;G.rin=q;kifRec({t:'kan',p:q,tile:b});msg=`${G.names[q]}が大明槓（${N[b]}）新ドラ表示`;if(G.hum[q]){G.stage='me';G.act=q;draw()}else{render('');setTimeout(()=>cpuTurn(q),700)}}
 function seenCnt(hand){const c=Array(27).fill(0),add=t=>{c[t&31]++};
  hand.forEach(add);G.ind.forEach(add);G.ura.forEach(add);
@@ -837,7 +837,7 @@ function yakuman(c,f,p,wt,ts){f=f||c;const r=[];
  if(wc.every(x=>x>=3))r.push('大四喜');else if(wc.filter(x=>x>=3).length==3&&wc.some(x=>x==2))r.push('小四喜');
  if(f.slice(0,20).every(x=>!x))r.push('字一色');
  if(f.every((x,i)=>!x||[12,13,14,16,18,25].includes(i)))r.push('緑一色');
- if(!kokushi(c)&&f.every((x,i)=>!x||[0,2,10,11,19].includes(i)))r.push('清老頭');
+ if(!kokushi(c)&&f.every((x,i)=>!x||[0,1,2,10,11,19].includes(i)))r.push('清老頭');
  for(const b of [2,11]){if(c.slice(b,b+9).reduce((a,x)=>a+x,0)==14&&c[b]>=3&&c[b+8]>=3&&c.slice(b+1,b+8).every(x=>x>=1))r.push('九蓮宝燈')}
  for(let i=0;i<27;i++)if(!(p!=null&&G.pon[p].length)&&c[i]==2&&(ts||(wt!=null&&i==(wt&31)))&&c.every((x,j)=>{const y=x-(j==i?2:0);return y==0||y==3})){r.push('四暗刻');break}
  return r}
@@ -913,7 +913,7 @@ function yh(p,c,wt,ts){const f=fc(p,c),n=[],r=[];let h=0;const sw=20+(p-G.dealer
  if(f[roundWind()]>=3){h++;n.push('場風');r.push(1)}if(f[sw]>=3){h++;n.push('自風');r.push(1)}
  if(c.some((x,i)=>x>=2&&c.every((y,j)=>{const z=y-(j==i?2:0);return z==0||z==3}))){h+=2;n.push('対々和');r.push(2)}
  if(wt!=null&&sanankou(p,c,wt,ts)){h+=2;n.push('三暗刻');r.push(2)}
- if(f.every((x,i)=>!x||(i>=3&&i<=9)||(i>=12&&i<=18))){h++;n.push('断幺九');r.push(1)}
+ if(f.every((x,i)=>!x||i==1||(i>=3&&i<=9)||(i>=12&&i<=18))){h++;n.push('断幺九');r.push(1)}
  const gs=[f[0]+f[1],f.slice(2,11).reduce((a,x)=>a+x,0),f.slice(11,20).reduce((a,x)=>a+x,0)].filter(x=>x>0).length,hz=f.slice(20).some(x=>x>0);
  if(gs==1&&hz){const v=mz?3:2;h+=v;n.push('混一色');r.push(v)}else if(gs==1&&!hz){const v=mz?6:5;h+=v;n.push('清一色');r.push(v)}
  if(wt!=null&&pinfu(p,c,wt)){h++;n.push('平和');r.push(1)}
@@ -957,7 +957,10 @@ function win2_(w,from,t,mo,first,dw){
  if(G.fev[w])chance(w,1,'フィーバーリーチ',dicePayer);
  if(mz&&rd>=2&&gd>=2)chance(w,1,'門前で赤牌・金牌コンプリート',dicePayer);
  let tulip=0,tulipFlags=[],tulipLog=[],tulipHits=[],tulipIdx=[],ud=false;
- if(ri&&G.wall.length){
+ // 「何回でも和了」オプション中のCPUフィーバーはチューリップ自体を無効化。
+ // 表示だけでなく獲得枚数・チップ計算・山消費も発生させない。
+ const noCpuTulip=!!(G.opt.rep&&G.fev[w]&&!G.hum[w]);
+ if(ri&&G.wall.length&&!noCpuTulip){
   // チューリップは実際に残っているG.wallから、その時点の山順でめくる。
   // 手牌・河・抜きドラ等から仮想の牌を生成したり、ランダム抽出したりしない。
   const tgtTiles=h.concat(G.nuki[w]);
@@ -1103,17 +1106,17 @@ function togNoPon(){
 }
 function autoWinChk(p,a){if(!AUTOWIN||AWT||!/U\('(tsumo|ron)'/.test(a))return;
  const k=G.stage;AWT=setTimeout(()=>{AWT=0;if(!AUTOWIN||G.stage!=k||G.act!=p||RES)return;U(k=='ron'?'ron':'tsumo',k=='ron'?1:undefined)},450)}
-function diceAnimHtml(r){
+function diceAnimHtml(r,st){
  if(!r.diceRuns||!r.diceRuns.length)return r.dice?`<div class="dice">${r.dice}</div>`:'';
- let delay=1500;const dsKey=JSON.stringify([r.w,r.pts,r.diceRuns]),dsPlay=DSKEY!=dsKey;DSKEY=dsKey;if(dsPlay)setTimeout(()=>{dsCut();playClip('chance')},300);
+ let delay=st?0:1500;const dsKey=JSON.stringify([r.w,r.pts,r.diceRuns]),dsPlay=st?false:DSKEY!=dsKey;if(!st)DSKEY=dsKey;if(dsPlay)setTimeout(()=>{dsCut();playClip('chance')},300);
  const blocks=r.diceRuns.map(run=>{
   const rollsHtml=run.rolls.map(roll=>roll.seq.map(att=>{
-    const d0=delay;delay+=700;if(dsPlay)setTimeout(()=>snd('dice'),d0);
+    const d0=delay;delay+=st?0:700;if(dsPlay)setTimeout(()=>snd('dice'),d0);
     const cls=att.again?(att.value==null?'re':'jp'):(att.value>0?'win':att.value<0?'lose':'');
     const diceHtml=att.d.map((x,di)=>`<span class="d3" style="animation-delay:${d0+di*45}ms">${DF[x-1]}</span>`).join('');
     return `<div class="chrow ${cls}" style="animation-delay:${d0}ms"><span class="chbowl">${diceHtml}</span><span class="chlabel" style="animation-delay:${d0+480}ms">${att.label}${att.value!=null?(att.value>0?' +':' ')+att.value+'枚':''}</span></div>`;
   }).join('')).join('');
-  const td=delay;delay+=500;
+  const td=delay;delay+=st?0:500;
   const totalLine=`<div class="chtotal" style="animation-delay:${td}ms">計${run.tot>0?'+':''}${run.tot}枚${run.mul>1?` → 💰祝儀倍 実質${run.real>0?'+':''}${run.real}枚`:''}</div>`;
   return `<div class="chblock"><div class="chwhy">🎰サイコロチャンス！（${run.why}）</div>${rollsHtml}${totalLine}</div>`;
  }).join('');
@@ -1200,6 +1203,21 @@ function homeFromResult(){
  V=0;
  menu();
 }
+function winBody(r,last){
+ const cls=v=>v>0?'pos':v<0?'neg':'';
+ const rowsH=r.rows.map(x=>`<div class="yr"><span>${x[0]}</span><span>${x[1]?x[1]+'翻':'役満'}</span></div>`).join('');
+ const chH=r.chl.length?r.chl.map(x=>`<div class="yr"><span>${x[0]}</span><span>${x[1]}枚</span></div>`).join('')+(r.dbl?'<div class="yr"><span>💰祝儀倍</span><span>×2</span></div>':''):'<span style="opacity:.6">なし</span>';
+ const summ=r.yn?`役満${r.yn>1?' ×'+r.yn:''}`:`${r.han}翻30符${r.kind?' '+r.kind:''}${r.cn?' 数え役満':''}`;
+ const tHits=(r.tulipHits||[]).reduce((a,x)=>a+x,0);
+ const tulipHtml=(r.tulipLog&&r.tulipLog.length)?`<div class="tulipsec"><b>🌷チューリップめくり${r.tulipUD?'（上下山）':''}</b><div class="tulipflip">${(()=>{const sp=(t,i)=>{const k=t>>5,n=r.tulipHits[i];return `<span class="t ${cl(t)} ${['','rd','gd','pt'][k]} ${r.tulipFlags[i]?'hit':''}" style="animation-delay:${i*350}ms">${svgTile(t)}${n>1?`<u class="tn">+${n}</u>`:''}</span>`};if(!r.tulipUD)return r.tulipLog.map(sp).join('');let o='';for(let i=0;i<r.tulipLog.length;i+=2)o+=`<span class="tpair">${sp(r.tulipLog[i],i)}${i+1<r.tulipLog.length?sp(r.tulipLog[i+1],i+1):''}</span>`;return o})()}</div><div class="sm1" style="animation-delay:${r.tulipLog.length*350+200}ms">${tHits?`的中${tHits}枚！チップ+${tHits}`:'ハズレ'}</div></div>`:'';
+ const doraHtml=r.ind?`<div style="display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;padding:2px 8px;font-size:11px"><span style="display:inline-flex;align-items:center;gap:4px"><b>表ドラ表示</b><span class="mh" style="padding:0">${tiles(r.ind)}</span></span>${r.rii?`<span style="display:inline-flex;align-items:center;gap:4px"><b>裏ドラ表示</b><span class="mh" style="padding:0">${tiles(r.ura)}</span></span>`:'<span style="opacity:.6">（リーチなし：裏ドラなし）</span>'}</div>`:'';
+
+ return `<h3>和了結果　${r.names[r.w]}の${r.ron?'ロン（'+r.names[r.from]+'）':'ツモ'}</h3>
+ <div class="mh">${tiles(r.hand)}<span style="width:6px"></span>${tiles([r.wt])}${r.mel.length?'<span style="width:6px"></span>'+tiles(r.mel):''}<span style="flex:1"></span>${tiles(r.nk)}</div>
+ ${doraHtml}${tulipHtml}
+ <div class="cols"><div><b>役</b>${rowsH}<div class="sm1">${summ}${r.hb?` 本場+${r.hb}点`:''}${r.wild?` ／白ポッチ→${r.wild}`:''}</div></div><div><b>祝儀</b>${chH}</div></div>
+ ${diceAnimHtml(r,!last)}
+ ${last?`<table class="sc"><tr><th>名前</th><th>点数増減</th><th>→合計</th><th>祝儀</th><th>→合計</th></tr>${r.names.map((n,i)=>`<tr><td>${n}</td><td class="${cls(r.chg[i])}">${r.chg[i]?fmtN(r.chg[i]):'0'}</td><td>${r.pts[i].toLocaleString()}点</td><td class="${cls(r.cc[i])}">${fmtN(r.cc[i],'枚')}</td><td>${r.ch[i]}枚</td></tr>`).join('')}</table>`:''}`}
 function resHtml(){const r=RES;if(!r){RIVV=false;return''}
  const cls=v=>v>0?'pos':v<0?'neg':'';
  const nextB=r.done?(ROLE=='guest'?'<span style="opacity:.7">ホストの操作待ち</span>':`<button onclick="contRes()">${G.over?'もう一度':'次に進む'}</button>`):'';
@@ -1210,19 +1228,9 @@ function resHtml(){const r=RES;if(!r){RIVV=false;return''}
  const fin=r.fin?`<div style="padding:2px 8px;color:#ffd54a">終局！ ${r.fin.map((x,i)=>`${i+1}位 ${x[1]} ${x[0].toLocaleString()}点(🪙${x[2]})`).join(' ／ ')}</div><table class="sc"><tr><th>順位</th><th>名前</th><th>今回スコア</th><th>累計スコア</th><th>累計チップ</th></tr>${r.fin.map((x,i)=>`<tr><td>${i+1}位</td><td>${x[1]}</td><td>${sg(x[4])}</td><td><b>${sg(x[5])}</b></td><td>${sg(x[6])}枚</td></tr>`).join('')}</table>${KIF?'<div style="padding:3px 8px"><button class="g" onclick="homeFromResult()">🏠 ホームに戻る</button></div>':''}`:'';
  if(r.ty=='ryu'){const tpBlock=(r.tp&&r.tp.length)?r.tp.map((p,i)=>`<div style="padding:2px 8px 0;font-size:10px">${r.names[p]}（テンパイ）</div><div class="mh">${tiles(r.tpHand[i])}${r.tpMel[i].length?'<span style="width:6px"></span>'+tiles(r.tpMel[i]):''}</div>`).join(''):'<div style="padding:4px 8px;font-size:10px;opacity:.7">テンパイ者なし</div>';
  return `<div class="modal"><h3>流局</h3>${tpBlock}<table class="sc"><tr><th>名前</th><th>持ち点</th><th>チップ</th></tr>${r.names.map((n,i)=>`<tr><td>${n}</td><td>${r.pts[i].toLocaleString()}点</td><td>${r.ch[i]}枚</td></tr>`).join('')}</table>${r.pen&&r.pen.some(x=>x)?`<div style="padding:2px 8px">ノーテン罰符: ${r.names.map((n,i)=>n+' '+(r.pen[i]>0?'+':'')+r.pen[i]).join(' ／ ')}</div>`:''}${fin}<div class="mf">${rvBtn}${btn}</div></div>`}
- const rowsH=r.rows.map(x=>`<div class="yr"><span>${x[0]}</span><span>${x[1]?x[1]+'翻':'役満'}</span></div>`).join('');
- const chH=r.chl.length?r.chl.map(x=>`<div class="yr"><span>${x[0]}</span><span>${x[1]}枚</span></div>`).join('')+(r.dbl?'<div class="yr"><span>💰祝儀倍</span><span>×2</span></div>':''):'<span style="opacity:.6">なし</span>';
- const summ=r.yn?`役満${r.yn>1?' ×'+r.yn:''}`:`${r.han}翻30符${r.kind?' '+r.kind:''}${r.cn?' 数え役満':''}`;
- const tHits=(r.tulipHits||[]).reduce((a,x)=>a+x,0);
- const tulipHtml=(r.tulipLog&&r.tulipLog.length)?`<div class="tulipsec"><b>🌷チューリップめくり${r.tulipUD?'（上下山）':''}</b><div class="tulipflip">${(()=>{const sp=(t,i)=>{const k=t>>5,n=r.tulipHits[i];return `<span class="t ${cl(t)} ${['','rd','gd','pt'][k]} ${r.tulipFlags[i]?'hit':''}" style="animation-delay:${i*350}ms">${svgTile(t)}${n>1?`<u class="tn">+${n}</u>`:''}</span>`};if(!r.tulipUD)return r.tulipLog.map(sp).join('');let o='';for(let i=0;i<r.tulipLog.length;i+=2)o+=`<span class="tpair">${sp(r.tulipLog[i],i)}${i+1<r.tulipLog.length?sp(r.tulipLog[i+1],i+1):''}</span>`;return o})()}</div><div class="sm1" style="animation-delay:${r.tulipLog.length*350+200}ms">${tHits?`的中${tHits}枚！チップ+${tHits}`:'ハズレ'}</div></div>`:'';
- const doraHtml=r.ind?`<div style="display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;padding:2px 8px;font-size:11px"><span style="display:inline-flex;align-items:center;gap:4px"><b>表ドラ表示</b><span class="mh" style="padding:0">${tiles(r.ind)}</span></span>${r.rii?`<span style="display:inline-flex;align-items:center;gap:4px"><b>裏ドラ表示</b><span class="mh" style="padding:0">${tiles(r.ura)}</span></span>`:'<span style="opacity:.6">（リーチなし：裏ドラなし）</span>'}</div>`:'';
- const pv=(r.prev||[]).map(x=>`<div style="padding:2px 8px;color:#ffd54a">ダブロン: ${x.names[x.w]} ${x.yn?'役満':x.han+'翻'} ${x.kind||''} ＋${x.chg[x.w].toLocaleString()}点</div>`).join('');
- return `<div class="modal"><h3>和了結果　${r.names[r.w]}の${r.ron?'ロン（'+r.names[r.from]+'）':'ツモ'}</h3>${pv}
- <div class="mh">${tiles(r.hand)}<span style="width:6px"></span>${tiles([r.wt])}${r.mel.length?'<span style="width:6px"></span>'+tiles(r.mel):''}<span style="flex:1"></span>${tiles(r.nk)}</div>
- ${doraHtml}${tulipHtml}
- <div class="cols"><div><b>役</b>${rowsH}<div class="sm1">${summ}${r.hb?` 本場+${r.hb}点`:''}${r.wild?` ／白ポッチ→${r.wild}`:''}</div></div><div><b>祝儀</b>${chH}</div></div>
- ${diceAnimHtml(r)}
- <table class="sc"><tr><th>名前</th><th>点数増減</th><th>→合計</th><th>祝儀</th><th>→合計</th></tr>${r.names.map((n,i)=>`<tr><td>${n}</td><td class="${cls(r.chg[i])}">${r.chg[i]?fmtN(r.chg[i]):'0'}</td><td>${r.pts[i].toLocaleString()}点</td><td class="${cls(r.cc[i])}">${fmtN(r.cc[i],'枚')}</td><td>${r.ch[i]}枚</td></tr>`).join('')}</table>${fin}<div class="mf">${rvBtn}${btn}</div></div>`}
+ const prevs=(r.prev||[]).map(x=>`<div class="dbSec">${winBody(x,false)}</div>`).join('<hr style="border:0;border-top:1px solid #3ca8d1;margin:4px 0">');
+ const dbTitle=prevs?`<div style="padding:3px 8px;color:#ffd54a;font-weight:700;font-size:12px">⚔ ダブロン（${(r.prev.length+1)}人和了）</div>`:'';
+ return `<div class="modal">${dbTitle}${prevs}${prevs?'<hr style="border:0;border-top:1px solid #3ca8d1;margin:4px 0">':''}${winBody(r,true)}${fin}<div class="mf">${rvBtn}${btn}</div></div>`}
 const RULES=`<div style="font-size:12px;opacity:.85;line-height:1.7">赤5筒・金5筒・赤5索・金5索入り<br>チップ：一発1・赤1・裏1・金2・🌷チューリップ1／祝儀倍リーチ：半荘に1回、宣言者が和了したらチップ倍<br>🌷チューリップ：リーチして和了した時、次にツモるはずだった上山から1枚ずつめくり、的中している限り連続でめくり続け、ハズレた時点で終了。1枚めくるごとに、手牌の中でその牌が対象となる牌の枚数分チップ獲得（例：手牌に4p5p6pがあって5pがめくれたら3枚全てが対象のため3枚獲得）。山が長く残っているほど連続のチャンスが増えるため早上がりが有利。筒子・索子は数字±1（同色、1と9は輪になっていて1の隣は9と2、9の隣は8と1）、萬子は1萬・7萬どちらでも、三元牌は白發中どれでも、風牌は東南西北の隣（東⇔南⇔西⇔北⇔東の輪）が対象。手牌だけでなく抜きドラ（抜いた1萬・7萬・北）も対象に含む<br>1萬は手牌に持ったままだと国士無双以外では和了できない（北は国士無双・小四喜・大四喜のみ可）／他家が1萬・7萬・北を抜いた時点でもロン可（国士・小四喜・大四喜の待ちや、手牌の7萬を使う待ち）／門前ツモのみでも和了可／見逃し後フリテン（同巡内。リーチ後は永続）／本場：1本場1000点（ロン1000点・ツモ各1000点）／流局ノーテン罰符（場に2000点）／ダブロンあり（本場・供託は先着のみ）<br>リーチのみ・リーチツモのみ＝役満（他の役・一発・嶺上・ドラ・抜きドラ・赤・金・裏ドラが付かない場合。抜きドラ牌（1萬・7萬・北）を河に捨てていたら無効）／ 本役満：国士無双（7萬が9萬の代わり）・大三元・大四喜・小四喜・字一色・緑一色・清老頭・九蓮宝燈・四暗刻・四槓子・天和・地和（複合は加算、大四喜はダブル）／ポン・暗カン可（役牌・対々和・断幺九・混一色・清一色。リーチなしでも役があれば和了可）<br>サイコロチャンス（チンチロ・全てチップ）：フィーバーリーチ和了時／門前で赤5筒・金5筒・赤5索・金5索を全て揃えて和了／リーチ後の白ポッチ（白2枚）ツモ／数え役満 各1回、本役満2回（フィーバーリーチ成立後に白ポッチツモすると複合して2回）。祝儀倍リーチ成立時はサイコロチャンスの獲得チップも倍になる。ロン和了時はサイコロチャンスの支払いも放銃者のみ（ツモ時は2人がそれぞれ全額支払い）<br>🎰フィーバーリーチ：7萬・7筒・7索のいずれかの確定暗刻（暗槓含む。その3枚を抜いても待ちが変わらない＝待ちに絡まない暗刻）がある状態でリーチすると発動。成立後、他家は打牌の選択権がなくなり強制ツモ切り（ポン・ロンも不可）。本人のみ通常通りプレイ可。祝儀倍リーチとも複合可（同時に成立）</div>`;
 const optsHtml=o=>`<label><input type="checkbox" id="orep" ${o.rep?'checked':''}> フィーバーリーチは何回でも和了できる</label><br><label><input type=\"checkbox\" id=\"oom2\" ${o.om2?'checked':''}> 表ドラ・裏ドラを2枚にする</label><br><label><input type="checkbox" id="otud" ${o.tud?'checked':''}> チューリップを上下山判定にする（奇数牌の暗刻があるとき。上下どちらか的中で継続・両方ハズレで終了）</label><br><br>ドラ枚数(表示牌): <select id="odora">${[1,2,3,4,5].map(n=>`<option ${n==o.dora?'selected':''}>${n}</option>`).join('')}</select><br><br>`;
 function menu(){
