@@ -333,6 +333,8 @@ table.sc th{color:#8fb3c6;font-weight:400}table.sc td:first-child,table.sc th:fi
 #chcap small{font-size:11px;font-weight:600;opacity:.85}
 #chcap{min-height:1.6em;font-size:18px;font-weight:800;color:#fff;text-shadow:0 2px 6px #000;text-align:center}
 .chhold{visibility:hidden}
+body.chresultwait .modal{visibility:hidden}
+body.chhidewintoast .toast{display:none!important}
 #chov button{background:#ffffff22;color:#fff;border:1px solid #fff5;border-radius:999px;padding:6px 18px;font-size:13px}
 .chcut{position:fixed;left:0;right:0;top:38%;z-index:60;pointer-events:none;animation:chIn 1.85s cubic-bezier(.2,.8,.2,1) both}
 .chcut .band{display:flex;align-items:baseline;justify-content:center;gap:.4em;padding:.12em .6em;white-space:nowrap;background:linear-gradient(90deg,#0000,#000d 14%,#000d 86%,#0000);border-top:2px solid var(--c);border-bottom:2px solid var(--c)}
@@ -349,11 +351,12 @@ table.sc th{color:#8fb3c6;font-weight:400}table.sc td:first-child,table.sc th:fi
 .chthold{visibility:hidden}
 #chtov{position:fixed;inset:0;z-index:56;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;color:#fff;padding:12px 0 max(10px,env(safe-area-inset-bottom));box-sizing:border-box}
 #chtov .tt{font-size:20px;font-weight:900;color:#ff9ee9;text-shadow:0 0 10px #ff4fc8,0 2px 4px #000}
-#chtov .tstage{display:flex;flex:1 1 auto;flex-direction:column;flex-wrap:nowrap;align-items:center;gap:10px;max-width:94vw;width:94vw;min-height:70px;max-height:42vh;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scroll-behavior:smooth;perspective:700px;padding:6px 0;box-sizing:border-box}
-#chtov .tstep{display:flex;gap:10px;flex-shrink:0;max-width:100%;animation:chDrop .4s ease-out both}
+#chtov .tstage{display:flex;flex:1 1 auto;flex-direction:row;flex-wrap:nowrap;align-items:center;justify-content:flex-start;gap:10px;max-width:94vw;width:94vw;min-height:70px;max-height:42vh;overflow-x:auto;overflow-y:hidden;overscroll-behavior:contain;scroll-behavior:smooth;perspective:700px;padding:6px 0;box-sizing:border-box}
+#chtov .tstep{display:flex;gap:10px;flex-shrink:0;max-width:100%;animation:chSlideLeft .4s ease-out both}
+#chtov .tstep.ud{flex-direction:column;gap:5px;align-items:center}
 #chtov .tcol{display:flex;flex-direction:column;align-items:center;gap:3px}#chtov .tcol small{font-size:11px;opacity:.8}
 #chtov .t{--w:min(15vw,60px);transition:transform .26s ease-in;transform-style:preserve-3d}
-#chtov .t.fl{transform:rotateY(90deg)}
+#chtov .t.fl{transform:rotateY(-90deg)}
 #chtov .t.hit{box-shadow:0 0 18px 8px #ffd54a,0 2px 0 #b5b5a8,0 3px 3px #0008;animation:tpulse .6s ease-in-out 2}
 #chtov .t.miss{opacity:.55;filter:grayscale(.6)}
 #chtov .t .tn{position:absolute;right:-3px;bottom:-3px;background:#e23;color:#fff;font-size:12px;font-style:normal;text-decoration:none;border-radius:8px;padding:0 4px;line-height:1.3;font-weight:bold}
@@ -372,6 +375,7 @@ table.sc th{color:#8fb3c6;font-weight:400}table.sc td:first-child,table.sc th:fi
 .chcut.tul{--c:#ff8ae6}
 .chcut.tsm b{font-size:min(6vh,30px,8vw)}.chcut.tsm i{font-size:min(6vh,30px,8vw)!important}.chcut.tsm u{font-size:min(4vh,18px,5vw)}.chcut.tul i{font-size:min(10vh,52px,12vw);font-weight:1000;color:var(--c);-webkit-text-stroke:2px #160015;paint-order:stroke fill;text-shadow:0 0 12px var(--c),0 3px 0 #000}
 @keyframes chDrop{0%{transform:translateY(-40px) scale(.6);opacity:0}100%{transform:none;opacity:1}}
+@keyframes chSlideLeft{0%{transform:translateX(60px) scale(.9);opacity:0}100%{transform:translateX(0) scale(1);opacity:1}}
 .riiWaitPanel{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--hw)*1.38 + 58px);z-index:7;max-width:94%;display:flex;flex-wrap:wrap;gap:4px 12px;justify-content:center;padding:4px 8px;background:#000c;border:1px solid #ffd54a88;border-radius:8px;pointer-events:none}
 .riiWaitPanel .rwTitle{width:100%;text-align:center;font-size:10px;font-weight:900;color:#ffd54a}
 .riiWaitPanel .rwItem{display:inline-flex;align-items:center;gap:3px;font-size:10px}
@@ -678,6 +682,8 @@ const AC={disc:A_disc,nuki:A_nuki,kan:A_kan,kakan:A_kakan,tsumo:A_tsumo,ron:A_ro
 function takeover(s){if(ROLE!='host'||!G.hum[s])return;G.hum[s]=0;G.names[s]+='(CPU)';const st=G.stage;
  if(st=='me'&&G.act==s){G.act=-1;cpuTurn(s)}else if(st=='ron'&&G.act==s){G.stage='';G.act=-1;G.mf[s]=1;ronCheck(G.rp,G.rt,G.rk+1,G.rws)}else if(st=='pon'&&G.act==s){G.stage='';G.act=-1;nextTurn(G.pp)}else render('')}
 function render(a){
+ if(RES&&RES.ty==='win'&&(CHBOWL||CHTUL))document.body.classList.add('chhidewintoast');else document.body.classList.remove('chhidewintoast');
+ if(!RES||RES.ty!=='win')document.body.classList.remove('chresultwait');
  if(a===''||a===undefined)a=btns();
  const p0=V,pR=(V+1)%3,pL=(V+2)%3,sw=['東','南','西'],ok=PEND?tenpaiDiscards(p0):[];
  const sc=p=>{const v=G.pts[p];return `${v<0?'-':''}${Math.floor(Math.abs(v)/1000)}<small>${String(Math.abs(v)%1000).padStart(3,'0')}</small>`};
@@ -775,9 +781,9 @@ const chbHtml=()=>`<label><input type="checkbox" id="ochb" ${CHBOWL?'checked':''
 let CHTUL=false,TLKEY='',CHTHOLD=false;try{CHTUL=localStorage.getItem('chtul')=='1'}catch(e){}
 function setChTul(v){CHTUL=!!v;try{localStorage.setItem('chtul',v?'1':'0')}catch(e){}}
 const chTKey=r=>JSON.stringify([r&&r.w,r&&r.pts,r&&r.tulipLog,r&&r.tulipFlags]);
-function chTRelease(){CHTHOLD=false;try{document.querySelectorAll('.chthold').forEach(e=>e.classList.remove('chthold'))}catch(x){}}
+function chTRelease(){CHTHOLD=false;try{document.querySelectorAll('.chthold').forEach(e=>e.classList.remove('chthold'));document.body.classList.remove('chresultwait')}catch(x){}}
 function chBanner(b,i,u,c){try{const e=document.createElement('div');e.className='chcut '+c;e.innerHTML=`<div class="band"><b>${b}</b><i>${i}</i>${u?`<u>${u}</u>`:''}</div>`;document.body.appendChild(e);setTimeout(()=>e.remove(),1900)}catch(x){}}
-function chTulipWrap(r,last,h){try{if(!CHTUL||!last||!h||!r.tulipLog||!r.tulipLog.length)return h;const key=chTKey(r);if(TLKEY!==key){TLKEY=key;CHTHOLD=true;chTulipStart(r,key)}return CHTHOLD?h.replace('class="tulipsec"','class="tulipsec chthold"'):h}catch(e){CHTHOLD=false;return h}}
+function chTulipWrap(r,last,h){try{if(!CHTUL||!last||!h||!r.tulipLog||!r.tulipLog.length)return h;document.body.classList.add('chresultwait');const key=chTKey(r);if(TLKEY!==key){TLKEY=key;CHTHOLD=true;chTulipStart(r,key)}return CHTHOLD?h.replace('class="tulipsec"','class="tulipsec chthold"'):h}catch(e){CHTHOLD=false;return h}}
 function chTulipStart(r,key){const t0=Date.now(),minD=(r.diceRuns&&r.diceRuns.length)?(CHBOWL?0:1500+chAttCount(r.diceRuns)*1500+800):700;
  const iv=setInterval(()=>{const stale=!RES||chTKey(RES)!==key;if(stale||Date.now()-t0>40000){clearInterval(iv);chTRelease();return}
   if(Date.now()-t0<minD||CHHOLD||document.getElementById('chov')||document.querySelector('.chcut'))return;
@@ -794,7 +800,7 @@ function chTulip(r,key){try{
  const flip=(el,t,hit,n)=>{el.classList.add('fl');setTimeout(()=>{if(closed)return;el.className='t fl '+cl(t)+' '+['','rd','gd','pt'][t>>5];el.innerHTML=svgTile(t)+(n>1?`<u class="tn">+${n}</u>`:'');requestAnimationFrame(()=>requestAnimationFrame(()=>{el.classList.remove('fl');el.classList.add(hit?'hit':'miss')}))},260)};
  const run=()=>{if(closed)return;if(!RES){close();return}
   if(k>=steps.length){cap.textContent=tot>0?'🌷チューリップ 計 +'+tot+'枚':'🌷チューリップ ハズレ（+0枚）';tm=setTimeout(close,1900);return}
-  const st=steps[k++],wrap=document.createElement('div');wrap.className='tstep';stage.appendChild(wrap);requestAnimationFrame(()=>{stage.scrollTo({top:stage.scrollHeight,behavior:'smooth'})});
+  const st=steps[k++],wrap=document.createElement('div');wrap.className='tstep'+(ud?' ud':'');stage.appendChild(wrap);requestAnimationFrame(()=>{stage.scrollTo({left:stage.scrollWidth,behavior:'smooth'})});
   const els=st.map((i,j)=>{const e=document.createElement('span');e.className='t tb';e.innerHTML=svgTile(L[i]);const col=document.createElement('div');col.className='tcol';if(ud)col.innerHTML='<small>'+(j?'下山':'上山')+'</small>';col.appendChild(e);wrap.appendChild(col);return e});
   tm=setTimeout(()=>{if(closed)return;st.forEach((i,j)=>flip(els[j],L[i],F[i],H[i]));
    tm=setTimeout(()=>{if(closed)return;const n=st.reduce((a,i)=>a+(H[i]||0),0),hit=st.some(i=>F[i]);
@@ -804,7 +810,7 @@ function chTulip(r,key){try{
     tm=setTimeout(()=>{if(!hit)k=steps.length;run()},hit?1100:950)},450)},300)};
  tm=setTimeout(run,250);
 }catch(e){try{document.getElementById('chtov').remove()}catch(x){}chTRelease()}}
-function chRelease(){CHHOLD=false;try{document.querySelectorAll('.chhold').forEach(e=>e.classList.remove('chhold'))}catch(x){}}
+function chRelease(){CHHOLD=false;try{document.querySelectorAll('.chhold').forEach(e=>e.classList.remove('chhold'));const pending=CHTUL&&RES&&RES.tulipLog&&RES.tulipLog.length&&TLKEY===chTKey(RES);if(!pending)document.body.classList.remove('chresultwait')}catch(x){}}
 function chAttCount(runs){let n=0;(runs||[]).forEach(r=>(r.rolls||[]).forEach(q=>n+=(q.seq||[]).length));return n}
 const CHCUT={'ピンゾロ':['ピンゾロ！','pin','もう一回！'],'アラシ':['アラシ！','ara','もう一回！'],'シゴロ':['シゴロ！','shi',''],'ヒフミ':['ヒフミ…','hif','']};
 function chCutIn(a,slot){try{if(a.value==null)return;const m=CHCUT[a.label]||(/^目[1-6]$/.test(a.label)?[a.label[1]+'の目','me','']:a.label=='目なし'?['目なし','no','']:null);if(!m)return;const e=document.createElement('div');e.className='chcut '+m[1];if(slot)e.style.top=(38+slot*15)+'%';e.innerHTML=`<div class="band"><b>${m[0]}</b><i>${a.value>0?'+':'−'}${Math.abs(a.value)}枚</i>${m[2]?`<u>${m[2]}</u>`:''}</div>`;document.body.appendChild(e);setTimeout(()=>e.remove(),1900)}catch(x){}}
@@ -1276,7 +1282,7 @@ function autoWinChk(p,a){if(!AUTOWIN||AWT||!/U\('(tsumo|ron)'/.test(a))return;
  const k=G.stage;AWT=setTimeout(()=>{AWT=0;if(!AUTOWIN||G.stage!=k||G.act!=p||RES)return;U(k=='ron'?'ron':'tsumo',k=='ron'?1:undefined)},450)}
 function diceAnimHtml(r,st){
  if(!r.diceRuns||!r.diceRuns.length)return r.dice?`<div class="dice">${r.dice}</div>`:'';
- const quick=st||CHBOWL;let delay=quick?0:1500;const dsKey=JSON.stringify([r.w,r.pts,r.diceRuns]),dsPlay=st?false:DSKEY!=dsKey;if(!st)DSKEY=dsKey;if(dsPlay)setTimeout(()=>{dsCut();playClip('chance')},300);if(dsPlay&&CHBOWL){CHHOLD=true;const bk=DSKEY;setTimeout(()=>chBowl(r.diceRuns,bk),1500)}
+ const quick=st||CHBOWL;let delay=quick?0:1500;const dsKey=JSON.stringify([r.w,r.pts,r.diceRuns]),dsPlay=st?false:DSKEY!=dsKey;if(!st)DSKEY=dsKey;if(dsPlay)setTimeout(()=>{dsCut();playClip('chance')},300);if(dsPlay&&CHBOWL){document.body.classList.add('chresultwait');CHHOLD=true;const bk=DSKEY;setTimeout(()=>chBowl(r.diceRuns,bk),1500)}
  const blocks=r.diceRuns.map(run=>{
   const rollsHtml=run.rolls.map(roll=>roll.seq.map(att=>{
     const d0=delay;delay+=quick?0:(att.value!=null?1500:700);if(dsPlay&&!CHBOWL){setTimeout(()=>snd('dice'),d0);setTimeout(()=>chCutIn(att),d0+520)}
