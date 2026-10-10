@@ -62,7 +62,7 @@ button.g{background:#ddd}button.r{background:#e74c3c;color:#fff}
 .modal h3{margin:0;padding:2px 8px;background:#12557a;font-size:11px}
 .mh{display:flex;align-items:flex-end;gap:1px;padding:3px 8px}.mh .t{--w:min(18px,4.2vh)}
 .tulipsec{padding:1px 8px 2px}
-.tulipflip{display:flex;flex-wrap:wrap;gap:4px 3px;max-width:100%;perspective:400px;margin-top:2px}.tulipflip .tpair{display:inline-flex;gap:3px;margin-right:10px}
+.tulipflip{display:flex;flex-wrap:wrap;gap:4px 3px;max-width:100%;max-height:32vh;overflow-y:auto;overflow-x:hidden;align-content:flex-start;overscroll-behavior:contain;scroll-behavior:smooth;perspective:400px;margin-top:2px;padding:2px 3px}.tulipflip .tpair{display:inline-flex;gap:3px;margin-right:10px}
 .tulipflip .t{--w:min(18px,4.2vh);animation:tflip .5s ease-out both;transform-style:preserve-3d;position:relative}
 .tulipflip .t.hit{box-shadow:0 0 10px 4px #ffd54a,0 2px 0 #b5b5a8,0 3px 3px #0008;animation:tflip .5s ease-out both,tpulse .8s ease-in-out .55s 2}
 .tulipflip .t .tn{position:absolute;right:-3px;bottom:-3px;background:#e23;color:#fff;font-size:8px;font-style:normal;text-decoration:none;border-radius:7px;padding:0 3px;line-height:1.2;font-weight:bold;box-shadow:0 1px 2px #0008}
@@ -70,6 +70,18 @@ button.g{background:#ddd}button.r{background:#e74c3c;color:#fff}
 @keyframes tflip{0%{transform:rotateY(100deg) scale(.4);opacity:0}60%{transform:rotateY(-15deg) scale(1.08);opacity:1}100%{transform:rotateY(0deg) scale(1);opacity:1}}
 @keyframes tpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
 @keyframes tfade{0%{opacity:0;transform:translateY(-3px)}100%{opacity:1;transform:translateY(0)}}
+/* チューリップ牌が多いときは、今めくれている牌まで表示領域を自動スクロール */
+document.addEventListener('animationstart',function(e){
+ const tile=e.target;
+ if(!tile||!tile.matches||!tile.matches('.tulipflip .t')||e.animationName!=='tflip')return;
+ const box=tile.closest('.tulipflip');
+ if(!box)return;
+ const top=tile.offsetTop-box.offsetTop;
+ const bottom=top+tile.offsetHeight;
+ if(top<box.scrollTop||bottom>box.scrollTop+box.clientHeight){
+  box.scrollTo({top:Math.max(0,top-box.clientHeight+tile.offsetHeight+8),behavior:'smooth'});
+ }
+},true);
 .cols{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;padding:0 8px}
 .yr{display:flex;justify-content:space-between;border-bottom:1px solid #2a6a8a66;padding:0;font-size:10px;line-height:1.35}
 .sm1{text-align:center;margin-top:1px;color:#8fe}
@@ -285,7 +297,6 @@ table.sc th{color:#8fb3c6;font-weight:400}table.sc td:first-child,table.sc th:fi
   font-weight:1000;color:#fff!important;-webkit-text-stroke:3px #160015;paint-order:stroke fill;
   background:linear-gradient(90deg,#ff1515 0%,#ff7a00 12%,#fff000 25%,#25ed55 38%,#00dfff 51%,#2870ff 64%,#a238ff 77%,#ff28c8 90%,#ff1515 100%);
   background-size:220% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
-  filter:saturate(1.5);
   text-shadow:0 2px 0 #fff,0 4px 0 #7b1b00,0 6px 8px #000b;
   animation:callfx 1.5s ease-out both,diceRainbowFlow .7s linear infinite;
 }
@@ -318,12 +329,14 @@ table.sc th{color:#8fb3c6;font-weight:400}table.sc td:first-child,table.sc th:fi
 @keyframes callfx{0%{transform:translateX(-110%) scale(.6);opacity:0}25%{transform:translateX(0) scale(1.2);opacity:1}38%{transform:scale(1)}80%{transform:scale(1);opacity:1}100%{transform:translateX(110%) scale(1);opacity:0}}
 
 #chov{position:fixed;inset:0;z-index:55;background:#000a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+#chleg{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;font-size:11px;color:#fff;min-height:1px}#chleg span{padding:1px 8px;border-radius:999px;background:#ffffff1c;border:1px solid var(--c)}
+#chcap small{font-size:11px;font-weight:600;opacity:.85}
 #chcap{min-height:1.6em;font-size:18px;font-weight:800;color:#fff;text-shadow:0 2px 6px #000;text-align:center}
 .chhold{visibility:hidden}
 #chov button{background:#ffffff22;color:#fff;border:1px solid #fff5;border-radius:999px;padding:6px 18px;font-size:13px}
 .chcut{position:fixed;left:0;right:0;top:38%;z-index:60;pointer-events:none;animation:chIn 1.85s cubic-bezier(.2,.8,.2,1) both}
 .chcut .band{display:flex;align-items:baseline;justify-content:center;gap:.4em;padding:.12em .6em;white-space:nowrap;background:linear-gradient(90deg,#0000,#000d 14%,#000d 86%,#0000);border-top:2px solid var(--c);border-bottom:2px solid var(--c)}
-.chcut b{font-size:min(10vh,52px,13vw);font-weight:1000;-webkit-text-stroke:2px #160015;paint-order:stroke fill;color:var(--c);text-shadow:0 0 14px var(--c),0 4px 0 #000;animation:chPop .55s cubic-bezier(.3,1.6,.5,1) both}
+.chcut b{font-size:min(7.5vh,40px,10vw);font-weight:1000;-webkit-text-stroke:2px #160015;paint-order:stroke fill;color:var(--c);text-shadow:0 0 14px var(--c),0 4px 0 #000;animation:chPop .55s cubic-bezier(.3,1.6,.5,1) both}
 .chcut i{font-style:normal;font-size:min(7vh,34px,8vw);font-weight:900;color:#fff;text-shadow:0 2px 6px #000}
 .chcut u{text-decoration:none;font-size:min(7vh,34px,8vw);font-weight:900;color:#fff400;text-shadow:0 0 10px #ff4b00,0 2px 4px #000;animation:chBlink .28s steps(2) infinite}
 .chcut.me{--c:#8fff7a}.chcut.no{--c:#ff7a7a}.chcut.me i,.chcut.no i{font-size:min(10vh,52px,12vw);font-weight:1000;color:var(--c);-webkit-text-stroke:2px #160015;paint-order:stroke fill;text-shadow:0 0 12px var(--c),0 3px 0 #000}
@@ -336,8 +349,8 @@ table.sc th{color:#8fb3c6;font-weight:400}table.sc td:first-child,table.sc th:fi
 .chthold{visibility:hidden}
 #chtov{position:fixed;inset:0;z-index:56;background:radial-gradient(#2a0a20ee,#000f);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#fff}
 #chtov .tt{font-size:20px;font-weight:900;color:#ff9ee9;text-shadow:0 0 10px #ff4fc8,0 2px 4px #000}
-#chtov .tstage{display:flex;flex-wrap:wrap;gap:16px 18px;justify-content:center;max-width:94vw;perspective:700px;min-height:90px}
-#chtov .tstep{display:flex;gap:10px;animation:chDrop .4s ease-out both}
+#chtov .tstage{display:flex;flex-direction:column;flex-wrap:nowrap;align-items:center;gap:12px;max-width:94vw;width:94vw;max-height:36vh;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scroll-behavior:smooth;perspective:700px;min-height:90px;padding:8px 0;box-sizing:border-box}
+#chtov .tstep{display:flex;gap:10px;flex-shrink:0;max-width:100%;animation:chDrop .4s ease-out both}
 #chtov .tcol{display:flex;flex-direction:column;align-items:center;gap:3px}#chtov .tcol small{font-size:11px;opacity:.8}
 #chtov .t{--w:min(15vw,60px);transition:transform .26s ease-in;transform-style:preserve-3d}
 #chtov .t.fl{transform:rotateY(90deg)}
@@ -770,7 +783,7 @@ function chTulip(r,key){try{
  const flip=(el,t,hit,n)=>{el.classList.add('fl');setTimeout(()=>{if(closed)return;el.className='t fl '+cl(t)+' '+['','rd','gd','pt'][t>>5];el.innerHTML=svgTile(t)+(n>1?`<u class="tn">+${n}</u>`:'');requestAnimationFrame(()=>requestAnimationFrame(()=>{el.classList.remove('fl');el.classList.add(hit?'hit':'miss')}))},260)};
  const run=()=>{if(closed)return;if(!RES){close();return}
   if(k>=steps.length){cap.textContent=tot>0?'🌷チューリップ 計 +'+tot+'枚':'🌷チューリップ ハズレ（+0枚）';tm=setTimeout(close,1900);return}
-  const st=steps[k++],wrap=document.createElement('div');wrap.className='tstep';stage.appendChild(wrap);
+  const st=steps[k++],wrap=document.createElement('div');wrap.className='tstep';stage.appendChild(wrap);requestAnimationFrame(()=>{stage.scrollTo({top:stage.scrollHeight,behavior:'smooth'})});
   const els=st.map((i,j)=>{const e=document.createElement('span');e.className='t tb';e.innerHTML=svgTile(L[i]);const col=document.createElement('div');col.className='tcol';if(ud)col.innerHTML='<small>'+(j?'下山':'上山')+'</small>';col.appendChild(e);wrap.appendChild(col);return e});
   tm=setTimeout(()=>{if(closed)return;st.forEach((i,j)=>flip(els[j],L[i],F[i],H[i]));
    tm=setTimeout(()=>{if(closed)return;const n=st.reduce((a,i)=>a+(H[i]||0),0),hit=st.some(i=>F[i]);
@@ -782,47 +795,66 @@ function chTulip(r,key){try{
 function chRelease(){CHHOLD=false;try{document.querySelectorAll('.chhold').forEach(e=>e.classList.remove('chhold'))}catch(x){}}
 function chAttCount(runs){let n=0;(runs||[]).forEach(r=>(r.rolls||[]).forEach(q=>n+=(q.seq||[]).length));return n}
 const CHCUT={'ピンゾロ':['ピンゾロ！','pin','もう一回！'],'アラシ':['アラシ！','ara','もう一回！'],'シゴロ':['シゴロ！','shi',''],'ヒフミ':['ヒフミ…','hif','']};
-function chCutIn(a){try{if(a.value==null)return;const m=CHCUT[a.label]||(/^目[1-6]$/.test(a.label)?[a.label[1]+'の目','me','']:a.label=='目なし'?['目なし','no','']:null);if(!m)return;const e=document.createElement('div');e.className='chcut '+m[1];e.innerHTML=`<div class="band"><b>${m[0]}</b><i>${a.value>0?'+':'−'}${Math.abs(a.value)}枚</i>${m[2]?`<u>${m[2]}</u>`:''}</div>`;document.body.appendChild(e);setTimeout(()=>e.remove(),1900)}catch(x){}}
+function chCutIn(a,slot){try{if(a.value==null)return;const m=CHCUT[a.label]||(/^目[1-6]$/.test(a.label)?[a.label[1]+'の目','me','']:a.label=='目なし'?['目なし','no','']:null);if(!m)return;const e=document.createElement('div');e.className='chcut '+m[1];if(slot)e.style.top=(38+slot*15)+'%';e.innerHTML=`<div class="band"><b>${m[0]}</b><i>${a.value>0?'+':'−'}${Math.abs(a.value)}枚</i>${m[2]?`<u>${m[2]}</u>`:''}</div>`;document.body.appendChild(e);setTimeout(()=>e.remove(),1900)}catch(x){}}
 function chBowl(runs,key){try{
- const att=[];(runs||[]).forEach(r=>(r.rolls||[]).forEach(q=>(q.seq||[]).forEach(a=>att.push(a))));
- if(!att.length||document.getElementById('chov')||DSKEY!==key){chRelease();return}
- const ov=document.createElement('div');ov.id='chov';ov.innerHTML='<canvas></canvas><div id="chcap"></div><button type="button">スキップ</button>';document.body.appendChild(ov);
- const cap=ov.querySelector('#chcap'),cv=ov.firstChild,x=cv.getContext('2d'),S=Math.min(innerWidth-24,innerHeight*.6,460),pr=window.devicePixelRatio||1,U=S/400,C=S/2;
- cv.style.width=cv.style.height=S+'px';cv.width=cv.height=S*pr;x.setTransform(pr,0,0,pr,0,0);
- const PIP={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
- const D=[0,1,2].map(i=>({x:C+(i-1)*58*U,y:C,vx:0,vy:0,a:0,w:0,h:0,vz:0,f:1,fin:1,done:true}));
- let idx=-1,raf=0,fr=0,closed=false,tm=null,wait=false;
+ const chains=[];(runs||[]).forEach(r=>(r.rolls||[]).forEach(q=>{if((q.seq||[]).length)chains.push({seq:q.seq,why:r.why||''})}));
+ if(!chains.length||document.getElementById('chov')||DSKEY!==key){chRelease();return}
+ // 複数のサイコロチャンス(チェーン)は最大3つずつ同時に振る
+ const rounds=[],batches=[];for(let i=0;i<chains.length;i+=3)batches.push(chains.slice(i,i+3));
+ batches.forEach(bt=>{const len=Math.max(...bt.map(c=>c.seq.length));for(let r=0;r<len;r++){const items=[];bt.forEach((c,ci)=>{if(c.seq[r])items.push({ci,a:c.seq[r]})});rounds.push({items,n:r+1,first:r==0,bt})}});
+ const CIRC=['①','②','③'],TC=['#fffdf8','#ffe066','#86bde8'];
+ const ov=document.createElement('div');ov.id='chov';ov.innerHTML='<canvas></canvas><div id="chleg"></div><div id="chcap"></div><button type="button">スキップ</button>';document.body.appendChild(ov);
+ const cv=ov.firstChild,leg=ov.querySelector('#chleg'),cap=ov.querySelector('#chcap'),x=cv.getContext('2d');
+ const S=Math.min(innerWidth-24,innerHeight*.55,460),pr=Math.min(window.devicePixelRatio||1,2),U=S/400,C=S/2,PX=Math.round(S*pr);
+ cv.style.width=cv.style.height=S+'px';cv.width=cv.height=PX;x.setTransform(pr,0,0,pr,0,0);
+ // 丼は最初に1回だけ描いて使い回す(毎フレームの影・グラデーション描画をやめて軽量化)
+ const bw=document.createElement('canvas');bw.width=bw.height=PX;const b=bw.getContext('2d');b.setTransform(pr,0,0,pr,0,0);
+ b.save();b.shadowColor='rgba(0,0,0,.6)';b.shadowBlur=22*U;b.shadowOffsetY=10*U;b.fillStyle='#d9d4c6';b.beginPath();b.arc(C,C,190*U,0,7);b.fill();b.restore();
+ let g=b.createLinearGradient(0,C-190*U,0,C+190*U);g.addColorStop(0,'#fff');g.addColorStop(1,'#cfc9b8');b.fillStyle=g;b.beginPath();b.arc(C,C,190*U,0,7);b.fill();
+ b.strokeStyle='#1f4e8c';b.lineWidth=5*U;b.beginPath();b.arc(C,C,180*U,0,7);b.stroke();b.lineWidth=1.5*U;b.beginPath();b.arc(C,C,171*U,0,7);b.stroke();
+ g=b.createRadialGradient(C-30*U,C-40*U,10*U,C,C,170*U);g.addColorStop(0,'#f8f5ee');g.addColorStop(.55,'#ebe6d8');g.addColorStop(.85,'#c9c2ae');g.addColorStop(1,'#9d957f');
+ b.fillStyle=g;b.beginPath();b.arc(C,C,166*U,0,7);b.fill();
+ b.strokeStyle='rgba(31,78,140,.45)';b.lineWidth=2.5*U;b.beginPath();b.arc(C,C,128*U,0,7);b.stroke();b.lineWidth=1.2*U;b.beginPath();b.arc(C,C,122*U,0,7);b.stroke();
+ // サイコロの目ごとの絵も最初に1回だけ作る(色違い×6面)
+ const PIP={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]},TINT=[['#fffdf8','#ddd8cc'],['#fff6b8','#e6c845'],['#d6efff','#86bde8']];
+ const SP=Math.ceil(50*U*1.4*pr),s0=SP/1.4;
+ const spr=TINT.map(tc=>[1,2,3,4,5,6].map(f=>{const c=document.createElement('canvas');c.width=c.height=SP;const q=c.getContext('2d');q.translate(SP/2,SP/2);
+  const lg=q.createLinearGradient(-s0/2,-s0/2,s0/2,s0/2);lg.addColorStop(0,tc[0]);lg.addColorStop(1,tc[1]);q.fillStyle=lg;q.beginPath();q.roundRect(-s0/2,-s0/2,s0,s0,s0*.18);q.fill();q.strokeStyle='rgba(0,0,0,.28)';q.lineWidth=Math.max(1,pr);q.stroke();
+  PIP[f].forEach(k=>{const px=((k%3)-1)*s0*.28,py=(Math.floor(k/3)-1)*s0*.28,r=f===1?s0*.17:s0*.085;q.beginPath();q.arc(px,py,r,0,7);q.fillStyle=f===1?'#c8202a':'#1a1a1a';q.fill()});return c}));
+ let D=[],K=1,ri=-1,raf=0,closed=false,tm=null,wait=false,running=false,R=null;
  const close=()=>{closed=true;cancelAnimationFrame(raf);clearTimeout(tm);ov.remove();chRelease()};
  ov.lastChild.onclick=close;
- const next=()=>{if(closed)return;idx++;if(idx>=att.length){let t=0,rl=0;(runs||[]).forEach(r=>{t+=r.tot||0;rl+=r.real!=null?r.real:(r.tot||0)});cap.textContent='計 '+(t>0?'+':'')+t+'枚'+(rl!==t?' → 実質 '+(rl>0?'+':'')+rl+'枚':'');tm=setTimeout(close,1700);return}
-  const a=att[idx];cap.textContent=(idx+1)+'投目…';try{snd('dice')}catch(e){}
-  D.forEach((d,i)=>{d.x=C+(i-1)*46*U+(Math.random()-.5)*14*U;d.y=C-120*U+Math.random()*20*U;d.vx=(Math.random()-.5)*4*U;d.vy=(3+Math.random()*3.5)*U;d.a=Math.random()*6;d.w=(Math.random()-.5)*.7;d.h=60+Math.random()*40;d.vz=Math.random()*3;d.fin=a.d[i];d.f=(1+Math.random()*6)|0;d.done=false});wait=true};
- const step=()=>{fr++;const R=165*U,dr=28*U;
+ const rnd6=()=>(1+Math.random()*6)|0;
+ const next=()=>{if(closed)return;ri++;
+  if(ri>=rounds.length){let t=0,rl=0,ln=[];(runs||[]).forEach(r=>{t+=r.tot||0;const v=r.real!=null?r.real:(r.tot||0);rl+=v;ln.push((r.why||'')+' '+((r.tot||0)>0?'+':'')+(r.tot||0)+'枚')});
+   cap.innerHTML='計 '+(t>0?'+':'')+t+'枚'+(rl!==t?' → 実質 '+(rl>0?'+':'')+rl+'枚':'')+(chains.length>1?'<br><small>'+ln.join(' ／ ')+'</small>':'');tm=setTimeout(close,2000);return}
+  R=rounds[ri];
+  if(R.first)leg.innerHTML=R.bt.length>1?R.bt.map((c,j)=>'<span style="--c:'+TC[j]+'">'+CIRC[j]+' '+c.why+'</span>').join(''):'';
+  const N=R.items.length*3;K=N>6?.7:N>3?.8:1;
+  D=[];R.items.forEach(it=>{for(let q=0;q<3;q++){const n=D.length;D.push({x:C+(n-(N-1)/2)*46*U*K+(Math.random()-.5)*10*U,y:C-120*U+Math.random()*20*U,vx:(Math.random()-.5)*4*U,vy:(3+Math.random()*3.5)*U,a:Math.random()*6,w:(Math.random()-.5)*.7,h:60+Math.random()*40,vz:Math.random()*3,f:rnd6(),fin:it.a.d[q],done:false,t:it.ci})}});
+  cap.textContent=R.n+'投目…';try{snd('dice')}catch(e){}wait=true;kick()};
+ const step=()=>{const Rb=165*U,dr=28*U*K;
   D.forEach(d=>{if(d.done)return;d.x+=d.vx;d.y+=d.vy;d.a+=d.w;d.vz-=.6;d.h+=d.vz;
-   if(d.h<=0){d.h=0;if(d.vz<-2.2){d.vz=-d.vz*.38;d.f=d.fin;d.w+=(Math.random()-.5)*.5;d.vx*=.85;d.vy*=.85}else d.vz=0}else if(fr%5===0)d.f=(1+Math.random()*6)|0;
+   if(d.h<=0){d.h=0;if(d.vz<-2.2){d.vz=-d.vz*.38;d.f=d.fin;d.w+=(Math.random()-.5)*.5;d.vx*=.85;d.vy*=.85}else d.vz=0}else if(d.h>0&&((d.a*7)|0)%5===0)d.f=rnd6();
    if(d.h===0){d.vx*=.975;d.vy*=.975;d.w*=.96}
    const sp=Math.hypot(d.vx,d.vy);
    if(d.h===0&&sp<.6){d.f=d.fin;d.vx*=.9;d.vy*=.9;d.w*=.88;const t=Math.round(d.a/(Math.PI/2))*Math.PI/2;d.a+=(t-d.a)*.15;if(sp<.08&&Math.abs(t-d.a)<.02){d.a=t;d.done=true;d.vx=d.vy=d.w=0}}
-   const dx=d.x-C,dy=d.y-C,ds=Math.hypot(dx,dy),lim=R-dr;
+   const dx=d.x-C,dy=d.y-C,ds=Math.hypot(dx,dy),lim=Rb-dr;
    if(ds>lim){const nx=dx/ds,ny=dy/ds,vn=d.vx*nx+d.vy*ny;d.x=C+nx*lim;d.y=C+ny*lim;if(vn>0){d.vx-=1.7*vn*nx;d.vy-=1.7*vn*ny;d.w+=(Math.random()-.5)*.3}}});
-  for(let i=0;i<3;i++)for(let j=i+1;j<3;j++){const a=D[i],b=D[j],dx=b.x-a.x,dy=b.y-a.y,ds=Math.hypot(dx,dy)||.01;
-   if(ds<2*dr&&Math.abs(a.h-b.h)<30){const nx=dx/ds,ny=dy/ds,ov2=2*dr-ds;a.x-=nx*ov2/2;a.y-=ny*ov2/2;b.x+=nx*ov2/2;b.y+=ny*ov2/2;const vn=(a.vx-b.vx)*nx+(a.vy-b.vy)*ny;if(vn>0){a.vx-=.85*vn*nx;a.vy-=.85*vn*ny;b.vx+=.85*vn*nx;b.vy+=.85*vn*ny;a.done=b.done=false;a.w+=.2;b.w-=.2}}}
-  if(wait&&D.every(d=>d.done)){wait=false;const a=att[idx];cap.textContent=a.label+(a.value!=null?(a.value>0?' +':' ')+a.value+'枚':'（振り直し）');chCutIn(a);tm=setTimeout(next,a.value!=null?1900:900)}};
- const die=d=>{const sc=1+d.h*.007,s=50*U*sc;x.save();x.translate(d.x,d.y);x.rotate(d.a);
-  x.shadowColor='rgba(0,0,0,.35)';x.shadowBlur=(4+d.h*.15)*U;x.shadowOffsetX=(2+d.h*.25)*U;x.shadowOffsetY=(3+d.h*.35)*U;
-  const g=x.createLinearGradient(-s/2,-s/2,s/2,s/2);g.addColorStop(0,'#fffdf8');g.addColorStop(1,'#ddd8cc');
-  x.fillStyle=g;x.beginPath();x.roundRect(-s/2,-s/2,s,s,s*.18);x.fill();x.shadowColor='transparent';x.strokeStyle='rgba(0,0,0,.25)';x.lineWidth=1;x.stroke();
-  PIP[d.f].forEach(k=>{const px=((k%3)-1)*s*.28,py=(Math.floor(k/3)-1)*s*.28,r=d.f===1?s*.17:s*.085;x.beginPath();x.arc(px,py,r,0,7);x.fillStyle=d.f===1?'#c8202a':'#1a1a1a';x.fill()});x.restore()};
- const draw=()=>{x.clearRect(0,0,S,S);
-  x.save();x.shadowColor='rgba(0,0,0,.6)';x.shadowBlur=22*U;x.shadowOffsetY=10*U;x.fillStyle='#d9d4c6';x.beginPath();x.arc(C,C,190*U,0,7);x.fill();x.restore();
-  let g=x.createLinearGradient(0,C-190*U,0,C+190*U);g.addColorStop(0,'#fff');g.addColorStop(1,'#cfc9b8');x.fillStyle=g;x.beginPath();x.arc(C,C,190*U,0,7);x.fill();
-  x.strokeStyle='#1f4e8c';x.lineWidth=5*U;x.beginPath();x.arc(C,C,180*U,0,7);x.stroke();x.lineWidth=1.5*U;x.beginPath();x.arc(C,C,171*U,0,7);x.stroke();
-  g=x.createRadialGradient(C-30*U,C-40*U,10*U,C,C,170*U);g.addColorStop(0,'#f8f5ee');g.addColorStop(.55,'#ebe6d8');g.addColorStop(.85,'#c9c2ae');g.addColorStop(1,'#9d957f');
-  x.fillStyle=g;x.beginPath();x.arc(C,C,166*U,0,7);x.fill();
-  x.strokeStyle='rgba(31,78,140,.45)';x.lineWidth=2.5*U;x.beginPath();x.arc(C,C,128*U,0,7);x.stroke();x.lineWidth=1.2*U;x.beginPath();x.arc(C,C,122*U,0,7);x.stroke();
-  D.slice().sort((a,b)=>a.h-b.h).forEach(die)};
- const loop=()=>{if(closed)return;if(DSKEY!==key){close();return}step();draw();raf=requestAnimationFrame(loop)};
- draw();loop();tm=setTimeout(next,250);setTimeout(()=>{if(!closed)close()},att.length*3500+5000);
+  for(let i=0;i<D.length;i++)for(let j=i+1;j<D.length;j++){const a=D[i],c=D[j];if(a.done&&c.done)continue;const dx=c.x-a.x,dy=c.y-a.y;if(Math.abs(dx)>2*dr||Math.abs(dy)>2*dr)continue;const ds=Math.hypot(dx,dy)||.01;
+   if(ds<2*dr&&Math.abs(a.h-c.h)<30){const nx=dx/ds,ny=dy/ds,ov2=2*dr-ds;a.x-=nx*ov2/2;a.y-=ny*ov2/2;c.x+=nx*ov2/2;c.y+=ny*ov2/2;const vn=(a.vx-c.vx)*nx+(a.vy-c.vy)*ny;if(vn>0){a.vx-=.85*vn*nx;a.vy-=.85*vn*ny;c.vx+=.85*vn*nx;c.vy+=.85*vn*ny;a.done=c.done=false;a.w+=.2;c.w-=.2}}}
+  if(wait&&D.length&&D.every(d=>d.done)){wait=false;const it=R.items;
+   cap.textContent=it.map(o=>(it.length>1?CIRC[o.ci]:'')+o.a.label+(o.a.value!=null?(o.a.value>0?' +':' ')+o.a.value+'枚':'（振り直し）')).join(' ／ ');
+   let nn=0;it.forEach(o=>{if(o.a.value!=null){const sl=nn++;setTimeout(()=>{if(!closed)chCutIn(o.a,sl)},sl*650)}});
+   tm=setTimeout(next,nn?1900+(nn-1)*650:900)}};
+ const draw=()=>{x.clearRect(0,0,S,S);x.drawImage(bw,0,0,S,S);
+  const ds=D.slice().sort((a,c)=>a.h-c.h);
+  ds.forEach(d=>{const z=50*U*K*(1+d.h*.007);x.fillStyle='rgba(0,0,0,'+Math.max(.1,.3-d.h*.002).toFixed(2)+')';x.beginPath();x.ellipse(d.x+(2+d.h*.25)*U,d.y+(3+d.h*.35)*U,z*.5,z*.46,0,0,7);x.fill()});
+  ds.forEach(d=>{const w=50*U*K*(1+d.h*.007)*1.4;x.save();x.translate(d.x,d.y);x.rotate(d.a);x.drawImage(spr[d.t][d.f-1],-w/2,-w/2,w,w);x.restore()})};
+ // 動いている間だけ描画する(待ち時間は止めて負荷ゼロ)
+ const frame=()=>{raf=0;if(closed)return;if(DSKEY!==key){close();return}step();draw();if(!D.length||D.every(d=>d.done)){running=false;return}raf=requestAnimationFrame(frame)};
+ const kick=()=>{if(!running&&!closed){running=true;raf=requestAnimationFrame(frame)}};
+ draw();tm=setTimeout(next,250);setTimeout(()=>{if(!closed)close()},rounds.length*3600+5000);
 }catch(e){try{document.getElementById('chov').remove()}catch(x){}chRelease()}}
 
 function chin(){let tx='',tot=0,seq=[];
