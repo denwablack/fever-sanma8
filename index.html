@@ -965,7 +965,7 @@ function doPon(q,p,t){const b=t&31,h=G.h[q],m=[t];for(let i=h.length-1;i>=0&&m.l
  G.pon[q].push(m);G.mord[q].push('p');snd('pon');smCall('ポン','ポン！');G.disc[p].pop();G.called=true;G.ipp=[0,0,0];G.turn=q;G.last=-1;G.stage='';kifRec({t:'pon',p:q,from:p,tile:t});
  msg=`${G.names[q]}がポン（${N[b]}）`;
  if(G.hum[q]){G.stage='me';G.act=q;draw()}else{render('');setTimeout(()=>cpuTurn(q),850)}}
-function doDkan(q,p,t){const b=t&31,h=G.h[q],k=[t];for(let i=h.length-1;i>=0&&k.length<4;i--)if((h[i]&31)==b)k.push(...h.splice(i,1));k.push((p-q+3)%3);G.kan[q].push(k);G.mord[q].push('k');G.disc[p].pop();G.called=true;G.ipp=[0,0,0];snd('kan');smCall('カン','カン！');G.ind.push(G.wall.pop());G.ura.push(G.wall.pop());h.sort(st);h.push(G.wall.pop());G.last=h.length-1;G.rin=q;kifRec({t:'kan',p:q,tile:b});msg=`${G.names[q]}が大明槓（${N[b]}）新ドラ表示`;if(G.hum[q]){G.stage='me';G.act=q;draw()}else{render('');setTimeout(()=>cpuTurn(q),700)}}
+function doDkan(q,p,t){const b=t&31,h=G.h[q],k=[t];for(let i=h.length-1;i>=0&&k.length<4;i--)if((h[i]&31)==b)k.push(...h.splice(i,1));k.push((p-q+3)%3);G.kan[q].push(k);G.mord[q].push('k');G.disc[p].pop();G.called=true;G.ipp=[0,0,0];snd('kan');smCall('カン','カン！');G.ind.push(G.wall.pop());G.ura.push(G.wall.pop());h.sort(st);h.push(G.wall.pop());G.last=h.length-1;G.rin=q;G.turn=q;kifRec({t:'kan',p:q,tile:b});msg=`${G.names[q]}が大明槓（${N[b]}）新ドラ表示`;if(G.hum[q]){G.stage='me';G.act=q;draw()}else{render('');setTimeout(()=>cpuTurn(q),700)}}
 function seenCnt(hand){const c=Array(27).fill(0),add=t=>{c[t&31]++};
  hand.forEach(add);G.ind.forEach(add);G.ura.forEach(add);
  for(let q=0;q<3;q++){G.disc[q].forEach(add);G.nuki[q].forEach(add);G.pon[q].forEach(k=>ptl(k).forEach(add));G.kan[q].forEach(k=>k.forEach(add))}
