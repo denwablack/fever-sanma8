@@ -347,9 +347,9 @@ table.sc th{color:#8fb3c6;font-weight:400}table.sc td:first-child,table.sc th:fi
 @keyframes chShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 
 .chthold{visibility:hidden}
-#chtov{position:fixed;inset:0;z-index:56;background:radial-gradient(#2a0a20ee,#000f);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#fff}
+#chtov{position:fixed;inset:0;z-index:56;background:radial-gradient(#2a0a20ee,#000f);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;color:#fff;padding:12px 0 max(10px,env(safe-area-inset-bottom));box-sizing:border-box}
 #chtov .tt{font-size:20px;font-weight:900;color:#ff9ee9;text-shadow:0 0 10px #ff4fc8,0 2px 4px #000}
-#chtov .tstage{display:flex;flex-direction:column;flex-wrap:nowrap;align-items:center;gap:12px;max-width:94vw;width:94vw;max-height:36vh;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scroll-behavior:smooth;perspective:700px;min-height:90px;padding:8px 0;box-sizing:border-box}
+#chtov .tstage{display:flex;flex:1 1 auto;flex-direction:column;flex-wrap:nowrap;align-items:center;gap:10px;max-width:94vw;width:94vw;min-height:70px;max-height:42vh;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scroll-behavior:smooth;perspective:700px;padding:6px 0;box-sizing:border-box}
 #chtov .tstep{display:flex;gap:10px;flex-shrink:0;max-width:100%;animation:chDrop .4s ease-out both}
 #chtov .tcol{display:flex;flex-direction:column;align-items:center;gap:3px}#chtov .tcol small{font-size:11px;opacity:.8}
 #chtov .t{--w:min(15vw,60px);transition:transform .26s ease-in;transform-style:preserve-3d}
@@ -357,7 +357,17 @@ table.sc th{color:#8fb3c6;font-weight:400}table.sc td:first-child,table.sc th:fi
 #chtov .t.hit{box-shadow:0 0 18px 8px #ffd54a,0 2px 0 #b5b5a8,0 3px 3px #0008;animation:tpulse .6s ease-in-out 2}
 #chtov .t.miss{opacity:.55;filter:grayscale(.6)}
 #chtov .t .tn{position:absolute;right:-3px;bottom:-3px;background:#e23;color:#fff;font-size:12px;font-style:normal;text-decoration:none;border-radius:8px;padding:0 4px;line-height:1.3;font-weight:bold}
-#chtov .tcap{min-height:1.6em;font-size:18px;font-weight:800;text-shadow:0 2px 6px #000}
+#chtov .tcap{min-height:1.4em;font-size:16px;font-weight:800;text-shadow:0 2px 6px #000;text-align:center}
+#chtov .thand{width:96vw;flex:0 0 auto;border-top:1px solid #ff9ee977;padding:6px 2vw 2px;box-sizing:border-box;background:#160514bb}
+#chtov .thandtitle{font-size:12px;font-weight:800;color:#ffd5f5;text-align:center;margin-bottom:5px}
+#chtov .thandtiles{display:flex;justify-content:center;align-items:flex-end;gap:2px;flex-wrap:nowrap;width:100%;overflow-x:auto;padding:4px 0 8px;box-sizing:border-box}
+#chtov .thandtiles .t{--w:min(6.2vw,30px);flex:0 0 auto;transition:filter .2s,transform .2s,box-shadow .2s}
+#chtov .thandtiles .t.tmatch{box-shadow:0 0 0 2px #ffd54a,0 0 12px 4px #ffd54a;filter:brightness(1.18)}
+#chtov .thandtiles .t.tnew{animation:none}
+#chtov .tnukis{display:flex;justify-content:center;align-items:center;gap:3px;flex-wrap:nowrap;min-height:24px;margin-top:2px}
+#chtov .tnukis .t{--w:min(6.2vw,30px);flex:0 0 auto}
+#chtov .tnukititle{font-size:10px;color:#ffd5f5;font-weight:800;margin-right:4px;white-space:nowrap}
+#chtov button{flex:0 0 auto}
 #chtov button{background:#ffffff22;color:#fff;border:1px solid #fff5;border-radius:999px;padding:6px 18px;font-size:13px}
 .chcut.tul{--c:#ff8ae6}
 .chcut.tsm b{font-size:min(6vh,30px,8vw)}.chcut.tsm i{font-size:min(6vh,30px,8vw)!important}.chcut.tsm u{font-size:min(4vh,18px,5vw)}.chcut.tul i{font-size:min(10vh,52px,12vw);font-weight:1000;color:var(--c);-webkit-text-stroke:2px #160015;paint-order:stroke fill;text-shadow:0 0 12px var(--c),0 3px 0 #000}
@@ -776,8 +786,9 @@ function chTulip(r,key){try{
  const L=r.tulipLog||[],F=r.tulipFlags||[],H=r.tulipHits||[],ud=!!r.tulipUD;
  if(!L.length||document.getElementById('chtov')){chTRelease();return}
  const steps=[];if(ud){for(let i=0;i<L.length;i+=2)steps.push(i+1<L.length?[i,i+1]:[i])}else L.forEach((_,i)=>steps.push([i]));
- const ov=document.createElement('div');ov.id='chtov';ov.innerHTML='<div class="tt">🌷チューリップ'+(ud?'（上下山）':'')+'</div><div class="tstage"></div><div class="tcap">めくります…</div><button type="button">スキップ</button>';document.body.appendChild(ov);
- const stage=ov.querySelector('.tstage'),cap=ov.querySelector('.tcap');let k=0,tot=0,closed=false,tm=null;
+ const ov=document.createElement('div');ov.id='chtov';ov.innerHTML='<div class="tt">🌷チューリップ'+(ud?'（上下山）':'')+'</div><div class="tstage"></div><div class="tcap">めくります…</div><div class="thand"><div class="thandtitle">実際の上がり手牌・黄色く光った牌がヒット</div><div class="thandtiles"></div><div class="tnukis"><span class="tnukititle">抜きドラ</span><span class="tnukiTiles"></span></div></div><button type="button">スキップ</button>';document.body.appendChild(ov);
+ const stage=ov.querySelector('.tstage'),cap=ov.querySelector('.tcap'),handBox=ov.querySelector('.thandtiles'),nukiBox=ov.querySelector('.tnukiTiles');let k=0,tot=0,closed=false,tm=null;
+ const handTiles=[...(r.hand||[])];if(r.wt!=null)handTiles.push(r.wt);const meldTiles=(r.mel||[]).flat(Infinity);handTiles.push(...meldTiles);const handEls=handTiles.map((t,i)=>{const e=document.createElement('span');e.className='t '+cl(t)+' '+['','rd','gd','pt'][t>>5];e.innerHTML=svgTile(t);e.title=N[t&31]||'';handBox.appendChild(e);return {t:t&31,e,i}});const nukiTiles=r.nk||[];if(nukiTiles.length){nukiTiles.forEach(t=>{const e=document.createElement('span');e.className='t '+cl(t)+' '+['','rd','gd','pt'][t>>5];e.innerHTML=svgTile(t);e.title=(N[t&31]||'')+'（抜きドラ）';nukiBox.appendChild(e)})}else{nukiBox.insertAdjacentHTML('beforeend','<span style="font-size:11px;color:#ddd">なし</span>')}
  const close=()=>{closed=true;clearTimeout(tm);ov.remove();chTRelease()};ov.lastChild.onclick=close;
  setTimeout(()=>{if(!closed)close()},steps.length*4500+6000);
  const flip=(el,t,hit,n)=>{el.classList.add('fl');setTimeout(()=>{if(closed)return;el.className='t fl '+cl(t)+' '+['','rd','gd','pt'][t>>5];el.innerHTML=svgTile(t)+(n>1?`<u class="tn">+${n}</u>`:'');requestAnimationFrame(()=>requestAnimationFrame(()=>{el.classList.remove('fl');el.classList.add(hit?'hit':'miss')}))},260)};
@@ -787,10 +798,11 @@ function chTulip(r,key){try{
   const els=st.map((i,j)=>{const e=document.createElement('span');e.className='t tb';e.innerHTML=svgTile(L[i]);const col=document.createElement('div');col.className='tcol';if(ud)col.innerHTML='<small>'+(j?'下山':'上山')+'</small>';col.appendChild(e);wrap.appendChild(col);return e});
   tm=setTimeout(()=>{if(closed)return;st.forEach((i,j)=>flip(els[j],L[i],F[i],H[i]));
    tm=setTimeout(()=>{if(closed)return;const n=st.reduce((a,i)=>a+(H[i]||0),0),hit=st.some(i=>F[i]);
-    if(hit){tot+=n;cap.textContent='的中 計 +'+tot+'枚';try{snd('tulip')}catch(e){}const side=ud?(F[st[0]]&&st[1]!=null&&F[st[1]]?'上下山':F[st[0]]?'上山':'下山'):'';chBanner(side+'的中！','+'+n+'枚','もう一枚！','tul tsm')}
+    handEls.forEach(({e})=>e.classList.remove('tmatch','tnew'));if(hit){const targets=new Set();st.forEach(i=>{if(F[i])tulipTargets(L[i]&31).forEach(t=>targets.add(t))});handEls.forEach(({t,e})=>{if(targets.has(t))e.classList.add('tmatch')})}
+    if(hit){tot+=n;cap.textContent='的中 計 +'+tot+'枚（手牌の光った牌が対象）';try{snd('tulip')}catch(e){}const side=ud?(F[st[0]]&&st[1]!=null&&F[st[1]]?'上下山':F[st[0]]?'上山':'下山'):'';chBanner(side+'的中！','+'+n+'枚','もう一枚！','tul tsm')}
     else{cap.textContent='ハズレ…';chBanner('ハズレ…','','','no tsm')}
-    tm=setTimeout(()=>{if(!hit)k=steps.length;run()},hit?1900:1800)},700)},550)};
- tm=setTimeout(run,300);
+    tm=setTimeout(()=>{if(!hit)k=steps.length;run()},hit?1600:1500)},600)},450)};
+ tm=setTimeout(run,250);
 }catch(e){try{document.getElementById('chtov').remove()}catch(x){}chTRelease()}}
 function chRelease(){CHHOLD=false;try{document.querySelectorAll('.chhold').forEach(e=>e.classList.remove('chhold'))}catch(x){}}
 function chAttCount(runs){let n=0;(runs||[]).forEach(r=>(r.rolls||[]).forEach(q=>n+=(q.seq||[]).length));return n}
@@ -800,7 +812,7 @@ function chBowl(runs,key){try{
  const chains=[];(runs||[]).forEach(r=>(r.rolls||[]).forEach(q=>{if((q.seq||[]).length)chains.push({seq:q.seq,why:r.why||''})}));
  if(!chains.length||document.getElementById('chov')||DSKEY!==key){chRelease();return}
  // 複数のサイコロチャンス(チェーン)は最大3つずつ同時に振る
- const rounds=[],batches=[];for(let i=0;i<chains.length;i+=3)batches.push(chains.slice(i,i+3));
+ const rounds=[],batches=chains.map(c=>[c]); // チャンスごとに3個の白いサイコロで順番に振る
  batches.forEach(bt=>{const len=Math.max(...bt.map(c=>c.seq.length));for(let r=0;r<len;r++){const items=[];bt.forEach((c,ci)=>{if(c.seq[r])items.push({ci,a:c.seq[r]})});rounds.push({items,n:r+1,first:r==0,bt})}});
  const CIRC=['①','②','③'],TC=['#fffdf8','#ffe066','#86bde8'];
  const ov=document.createElement('div');ov.id='chov';ov.innerHTML='<canvas></canvas><div id="chleg"></div><div id="chcap"></div><button type="button">スキップ</button>';document.body.appendChild(ov);
@@ -829,9 +841,9 @@ function chBowl(runs,key){try{
   if(ri>=rounds.length){let t=0,rl=0,ln=[];(runs||[]).forEach(r=>{t+=r.tot||0;const v=r.real!=null?r.real:(r.tot||0);rl+=v;ln.push((r.why||'')+' '+((r.tot||0)>0?'+':'')+(r.tot||0)+'枚')});
    cap.innerHTML='計 '+(t>0?'+':'')+t+'枚'+(rl!==t?' → 実質 '+(rl>0?'+':'')+rl+'枚':'')+(chains.length>1?'<br><small>'+ln.join(' ／ ')+'</small>':'');tm=setTimeout(close,2000);return}
   R=rounds[ri];
-  if(R.first)leg.innerHTML=R.bt.length>1?R.bt.map((c,j)=>'<span style="--c:'+TC[j]+'">'+CIRC[j]+' '+c.why+'</span>').join(''):'';
+  if(R.first)leg.innerHTML=R.bt.map((c,j)=>'<span style="--c:'+TC[0]+'">'+(chains.length>1?(ri+1)+'回目：':'')+c.why+'</span>').join('');
   const N=R.items.length*3;K=N>6?.7:N>3?.8:1;
-  D=[];R.items.forEach(it=>{for(let q=0;q<3;q++){const n=D.length;D.push({x:C+(n-(N-1)/2)*46*U*K+(Math.random()-.5)*10*U,y:C-120*U+Math.random()*20*U,vx:(Math.random()-.5)*4*U,vy:(3+Math.random()*3.5)*U,a:Math.random()*6,w:(Math.random()-.5)*.7,h:60+Math.random()*40,vz:Math.random()*3,f:rnd6(),fin:it.a.d[q],done:false,t:it.ci})}});
+  D=[];R.items.forEach(it=>{for(let q=0;q<3;q++){const n=D.length;D.push({x:C+(n-(N-1)/2)*46*U*K+(Math.random()-.5)*10*U,y:C-120*U+Math.random()*20*U,vx:(Math.random()-.5)*4*U,vy:(3+Math.random()*3.5)*U,a:Math.random()*6,w:(Math.random()-.5)*.7,h:60+Math.random()*40,vz:Math.random()*3,f:rnd6(),fin:it.a.d[q],done:false,t:0})}});
   cap.textContent=R.n+'投目…';try{snd('dice')}catch(e){}wait=true;kick()};
  const step=()=>{const Rb=165*U,dr=28*U*K;
   D.forEach(d=>{if(d.done)return;d.x+=d.vx;d.y+=d.vy;d.a+=d.w;d.vz-=.6;d.h+=d.vz;
