@@ -1243,6 +1243,30 @@ function win2_(w,from,t,mo,first,dw){
 function end(text,ryu,dealerWon){if(ryu){snd('ryu');if(G.kifCur&&!G.kifCur.res)G.kifCur.res='流局'}if(ryu&&G.wlog.length)text=G.wlog.join('<hr>')+'<hr>'+text;
  G.stage='done';G.act=-1;
  const pen=[0,0,0];
+ // 流し満貫：河が么九牌・字牌のみで、抜きドラ（1萬・7萬・北）を河に捨てておらず、鳴きもない場合。特例としてダブル役満扱い。
+ const nagashi=[];
+ if(ryu){
+  const yaochu=new Set([0,1,2,10,11,19,20,21,22,23,24,25,26]);
+  for(let q=0;q<3;q++){
+   const river=G.disc[q]||[];
+   const noCalls=!(G.pon[q]||[]).length&&!(G.kan[q]||[]).length;
+   const noNukiDiscard=!river.some(t=>[0,1,23].includes(t&31));
+   if(river.length&&noCalls&&noNukiDiscard&&river.every(t=>yaochu.has(t&31)))nagashi.push(q);
+  }
+  if(nagashi.length){
+   const delta=[0,0,0];
+   // ダブル役満相当の支払い（基準点16,000、三麻のロン／ツモ精算）
+   for(const w of nagashi){
+    for(let q=0;q<3;q++)if(q!==w){
+     const pay=G.dealer===w?32000:(q===G.dealer?32000:16000);
+     delta[w]+=pay;delta[q]-=pay;
+    }
+   }
+   delta.forEach((v,i)=>G.pts[i]+=v);
+   text+='<hr>🌊 流し満貫（ダブル役満）成立：'+nagashi.map(q=>G.names[q]).join('・')+' ／ '+G.names.map((n,i)=>n+(delta[i]>=0?' +':' ')+delta[i]+'点').join(' / ');
+   if(G.kifCur)G.kifCur.res=(G.kifCur.res?G.kifCur.res+' ／ ':'')+'流し満貫（ダブル役満）';
+  }
+ }
  // 「何回でも和了」のフィーバーシュバリーチが残ったまま流局した場合は、
  // テンパイ扱いをフィーバーリーチ者だけに固定する。
  const repFeverOwner=G.opt.rep?feverOwner():-1;
@@ -1436,7 +1460,7 @@ function resHtml(){const r=RES;if(!r){RIVV=false;return''}
  const dbTitle=prevs?`<div style="padding:3px 8px;color:#ffd54a;font-weight:700;font-size:12px">⚔ ダブロン（${(r.prev.length+1)}人和了）</div>`:'';
  return `<div class="modal">${dbTitle}${prevs}${prevs?'<hr style="border:0;border-top:1px solid #3ca8d1;margin:4px 0">':''}${winBody(r,true)}${fin}<div class="mf">${rvBtn}${btn}</div></div>`}
 const RULES=`<style>.ruleGroups{display:grid;gap:12px;text-align:left}.ruleCard{background:linear-gradient(145deg,#102f43,#0a1e2b);border:1px solid #4e9bb3;border-radius:12px;padding:12px 14px;box-shadow:0 4px 14px #0003}.ruleCard h3{margin:0 0 8px;color:#ffe27a;font-size:16px;border-bottom:1px solid #4e9bb388;padding-bottom:6px}.ruleCard p{margin:6px 0;font-size:13px;line-height:1.75}.ruleCard ul{margin:5px 0;padding-left:20px;font-size:13px;line-height:1.75}.ruleTag{display:inline-block;color:#7ee9ff;font-weight:800;margin-right:4px}</style><div class="ruleGroups">
-<section class="ruleCard"><h3>🀄 採用役一覧</h3><p><span class="ruleTag">使用牌・ドラ：</span>赤5筒・金5筒・赤5索・金5索入り。ドラ表示牌はオプションで設定。抜きドラは1萬・7萬・北。</p><p><span class="ruleTag">チップ：</span>一発1・赤1・裏1・金2・🌷チューリップ1。</p><p><span class="ruleTag">通常役・鳴き：</span>ポン・暗カン可。役牌・対々和・断幺九・混一色・清一色など、リーチなしでも役があれば和了可。</p><p><span class="ruleTag">役満：</span>リーチのみ・リーチツモのみは役満（他の役・一発・嶺上・ドラ・抜きドラ・赤・金・裏ドラが付かない場合。抜きドラ牌（1萬・7萬・北）を河に捨てていたら無効）。本役満は国士無双（7萬が9萬の代わり）・大三元・大四喜・小四喜・字一色・緑一色・清老頭・九蓮宝燈・四暗刻・四槓子・天和・地和・人和。複合は加算、大四喜はダブル。</p><p><span class="ruleTag">特殊牌：</span>1萬は手牌に持ったままだと国士無双以外では和了不可。北は国士無双・小四喜・大四喜のみ可。他家が1萬・7萬・北を抜いた時点でもロン可（国士・小四喜・大四喜の待ちや、手牌の7萬を使う待ち）。門前ツモのみでも和了可。</p><p><span class="ruleTag">フリテン・流局：</span>見逃し後フリテン（同巡内。リーチ後は永続）。本場は1本場1000点（ロン1000点・ツモ各1000点）。流局ノーテン罰符は場に2000点。ダブロンあり（本場・供託は先着のみ）。</p></section>
+<section class="ruleCard"><h3>🀄 採用役一覧</h3><p><span class="ruleTag">使用牌・ドラ：</span>赤5筒・金5筒・赤5索・金5索入り。ドラ表示牌はオプションで設定。抜きドラは1萬・7萬・北。</p><p><span class="ruleTag">チップ：</span>一発1・赤1・裏1・金2・🌷チューリップ1。</p><p><span class="ruleTag">通常役・鳴き：</span>ポン・暗カン可。役牌・対々和・断幺九・混一色・清一色など、リーチなしでも役があれば和了可。</p><p><span class="ruleTag">役満：</span>リーチのみ・リーチツモのみは役満（他の役・一発・嶺上・ドラ・抜きドラ・赤・金・裏ドラが付かない場合。抜きドラ牌（1萬・7萬・北）を河に捨てていたら無効）。本役満は国士無双（7萬が9萬の代わり）・大三元・大四喜・小四喜・字一色・緑一色・清老頭・九蓮宝燈・四暗刻・四槓子・天和・地和・人和。複合は加算、大四喜はダブル。</p><p><span class="ruleTag">特殊牌：</span>1萬は手牌に持ったままだと国士無双以外では和了不可。北は国士無双・小四喜・大四喜のみ可。他家が1萬・7萬・北を抜いた時点でもロン可（国士・小四喜・大四喜の待ちや、手牌の7萬を使う待ち）。門前ツモのみでも和了可。</p><p><span class="ruleTag">フリテン・流局：</span>見逃し後フリテン（同巡内。リーチ後は永続）。本場は1本場1000点（ロン1000点・ツモ各1000点）。流局ノーテン罰符は場に2000点。流し満貫はダブル役満扱い（河が么九牌・字牌のみ、鳴きなし。抜きドラの1萬・7萬・北を河に捨てた場合は無効）。ダブロンあり（本場・供託は先着のみ）。</p></section>
 <section class="ruleCard"><h3>💰 祝儀倍リーチ</h3><p>半荘に1回使用可能。宣言者が和了すると、獲得するチップが倍になる。</p><p>サイコロチャンスで獲得するチップも倍になる。フィーバーリーチと同時に成立させることも可能。</p></section>
 <section class="ruleCard"><h3>🎰 フィーバーリーチ</h3><p>7萬・7筒・7索のいずれかの確定暗刻（暗槓含む）がある状態でリーチすると発動。その3枚を抜いても待ちが変わらない、つまり待ちに絡まない暗刻が条件。</p><p>成立後は他家が打牌を選べず、強制ツモ切り（ポン・ロンも不可）。宣言者本人のみ通常どおりプレイできる。</p><p>祝儀倍リーチとも複合可。同時に成立できる。</p></section>
 <section class="ruleCard"><h3>🎲 サイコロチャンス（チンチロ）</h3><p>獲得・支払いはすべてチップ。次の場合に発生：</p><ul><li>フィーバーリーチで和了：1回</li><li>門前で赤5筒・金5筒・赤5索・金5索をすべて揃えて和了：1回</li><li>リーチ後に白ポッチ（白2枚）をツモ：1回</li><li>数え役満：1回</li><li>本役満：2回</li></ul><p>フィーバーリーチ成立後に白ポッチをツモすると複合して2回。祝儀倍リーチ成立時は獲得チップも倍。</p><p>ロン和了時の支払いは放銃者のみ。ツモ時は2人がそれぞれ全額を支払う。</p></section>
