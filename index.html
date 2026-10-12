@@ -654,15 +654,11 @@ function btns(){
    if(tenpaiDiscards(p).length){
     const feverAvail=tenpaiDiscards(p).some(i=>feverEligible(without(G.h[p],i),G.kan[p])&&!feverFuriten(p,i));
     if(feverAvail){
-     if(PEND==5){
-      a+=`<button onclick="setRiiType(1)">🎰フィーバーリーチ</button><button onclick="setRiiType(3)">🌈フィーバーシュバリーチ</button><button class="g" onclick="setRiiType(4)">ノーマルリーチ</button>`;
-     }else{
-      a+=`<button onclick="togRii(5)">${PEND==1?'🎰フィーバーリーチ':PEND==3?'🌈フィーバーシュバリーチ':PEND==4?'ノーマルリーチ':'🎰リーチ選択'}</button>`;
-     }
+     a+=`<button onclick="togRii(1)">${PEND==1?'取消':'🎰フィーバーリーチ'}</button><button onclick="togRii(3)">${PEND==3?'取消':'🌈フィーバーシュバリーチ'}</button><button class="g" onclick="togRii(4)">${PEND==4?'取消':'ノーマルリーチ'}</button>`;
     }else{
      a+=`<button onclick="togRii(4)">${PEND==4?'取消':'リーチ'}</button>`;
+     if(!G.used[p])a+=`<button class="r" onclick="togRii(2)">${PEND==2?'取消':'💰祝儀倍リーチ'}</button>`;
     }
-    if(!G.used[p])a+=`<button class="r" onclick="togRii(2)">${PEND==2?'取消':'💰祝儀倍リーチ'}</button>`;
    }}}
  if(G.stage=='pon'&&G.act==p){const bc=cnt(G.h[p])[G.pt&31]>=3; a=`${bc?`<button class="r" onclick="U('dkan',1)">カン</button>`:''}<button class="r" onclick="U('pon',1)">ポン</button><button class="g" onclick="U('pon',0)">パス</button>`;}
  if(G.stage=='ron'&&G.act==p)a=`<button class="r" onclick="U('ron',1)">ロン</button><button class="g" onclick="U('ron',0)">見送り</button>`;
@@ -682,7 +678,7 @@ function A_disc(s,i,pd){if(G.stage!='me'||G.act!=s||G.turn!=s||i<0||i>=G.h[s].le
  if(pd&&!G.rii[s]){if(pd==5)return;if(!tenpaiDiscards(s).includes(i))return;
   const fevOk=feverEligible(without(G.h[s],i),G.kan[s])&&!feverFuriten(s,i);
   const useFever=pd==1||pd==3;
-  const useShu=pd==2||pd==3;
+  const useShu=pd==3;
   const allowFever=useFever&&fevOk;
   const m=useShu&&!G.used[s];
   declareRii(s,i,m,allowFever,!G.firstInterrupted&&G.disc[s].length===0);if(G.stage=='done')return}
