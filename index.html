@@ -1059,7 +1059,7 @@ function ronCheck(p,t,k,ws){ws=ws||[];
   // 「何回でも和了」中のフィーバーシュバリーチ者は、直前のツモ和了牌を
   // 河へ捨てず退避しているため、その牌を含む待ちでも次の他家打牌でロン可能。
   const feverRepRon=!!(G.opt.rep&&G.fev[q]&&waits(G.h[q],q).includes(t&31));
-  if((G.opt.closedRiichiOnly&&!G.rii[q]&&!kokushi(c))||!win(c,q)||(!G.rii[q]&&!kokushi(c)&&!yakuman(c,fc(q,c),q,t).length&&yh(q,c,t).h==0)||(!feverRepRon&&furiten(q)))continue;
+  if((G.opt.closedRiichiOnly&&!G.rii[q]&&!kokushi(c)&&!G.pon[q].length)||!win(c,q)||(!G.rii[q]&&!kokushi(c)&&!yakuman(c,fc(q,c),q,t).length&&yh(q,c,t).h==0)||(!feverRepRon&&furiten(q)))continue;
   if(G.hum[q]){G.stage='ron';G.act=q;G.rp=p;G.rt=t;G.rk=k;G.rws=ws;msg=`${G.names[p]}が${N[t&31]}を${G.nkc?'抜きました':'切りました'}`;return draw()}
   ws=ws.concat(q)}
  if(ws.length){G.nkc=null;G.stage='';G.act=-1;render('');return setTimeout(()=>ronWin(ws,p,t),500)}
@@ -1225,7 +1225,7 @@ function yh(p,c,wt,ts){const f=fc(p,c),n=[],r=[];let h=0;const sw=20+(p-G.dealer
  if(ittsu(c)){const v=mz?2:1;h+=v;n.push('一気通貫');r.push(v)}
  if(!G.pon[p].length&&!ry&&chiitoi(c)){h+=2;n.push('七対子');r.push(2)}
  return{h,n,r}}
-const canT=(p,c)=>G.last>=0&&(!(G.opt.closedRiichiOnly&&!G.rii[p]&&!kokushi(c)))&&win(c,p)&&(G.rii[p]||kokushi(c)||yakuman(c,fc(p,c),p,G.h[p][G.last],1).length>0||yh(p,c,G.h[p][G.last],1).h>0||!G.pon[p].length);
+const canT=(p,c)=>G.last>=0&&(!(G.opt.closedRiichiOnly&&!G.rii[p]&&!kokushi(c)&&!G.pon[p].length))&&win(c,p)&&(G.rii[p]||kokushi(c)||yakuman(c,fc(p,c),p,G.h[p][G.last],1).length>0||yh(p,c,G.h[p][G.last],1).h>0||!G.pon[p].length);
 function kanOK(p,t){if(G.wall.length<3)return false;if(!G.rii[p])return true;if((G.h[p][G.last]&31)!=t)return false;return waits(without(G.h[p],G.last),p).join()==waits(G.h[p].filter(x=>(x&31)!=t),p).join()}
 function kan(p,t){const h=G.h[p],k=[];for(let i=h.length-1;i>=0;i--)if((h[i]&31)==t)k.push(...h.splice(i,1));
  G.called=true;G.firstInterrupted=true;G.kan[p].push(k);G.mord[p].push('k');snd('kan');smCall('カン','カン！');G.ind.push(G.wall.pop());G.ura.push(G.wall.pop());h.sort(st);h.push(G.wall.pop());G.last=h.length-1;G.rin=p;
